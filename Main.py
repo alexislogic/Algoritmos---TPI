@@ -9,30 +9,39 @@ FILE_RESERVAS = "reservas.txt"
 FILE_PROXIMO_ID = "proximo_id.txt" # Archivo para el contador de reservas
 HORARIOS_PARQUE = ['11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00']
 
-# --- Estructura de Archivos (Para tu PDF) ---
+# --- Estructura de Archivos---
+#   Funcionamiento:
+    # 1. turnos.txt
+    #    - Propósito: Almacena los cupos disponibles por cada turno.
+    #    - Formato: CSV (Valores Separados por Coma)
+    #    - Estructura: fecha,horario,cupos_disponibles
+    #    - Ejemplo:
+    #      2025-11-15,11:00,80
+    #      2025-11-15,12:00,100
+    #
+    # 2. reservas.txt
+    #    - Propósito: Log de todas las reservas confirmadas.
+    #    - Formato: CSV (Valores Separados por Coma)
+    #    - Estructura: id_reserva,fecha_turno,horario_turno,dni_resp,nombre_resp,cant_total,total_pagado,medio_pago,detalle_asistentes
+    #    - 'detalle_asistentes' es un string separado por '|'
+    #    - Ejemplo:
+    #      R1001,2025-11-15,11:00,30123456,Alexis Peralta,2,24000,Tarjeta de Crédito,(18;Si)|(10;No)
+    #
+    # 3. proximo_id.txt
+    #    - Propósito: Almacena el próximo número de ID de reserva.
+    #    - Formato: Texto plano (un solo número)
+    #    - Ejemplo:
+    #      1001
+#   Alcances Gestionar (Se crean durante el programa):
+    # Solicitud de turno (Nro Solicitud, DatosResponsable, DatosAcompañantes, FechaTurno, HoraTurno, Cantidad de personas, Importe, FechaSolicitud, HoraSolicitud,  Estado)
+    # Constancia de pago (Nro Solicitud, Importe, Medio de pago, FechaPago, HoraPago)
+    # Cancelacion (Nro Solicitud, ImporteTotal, ImporteDevuelto, FechaCancelación, HoraCancelación, Motivo, Estado)
 #
-# 1. turnos.txt
-#    - Propósito: Almacena los cupos disponibles por cada turno.
-#    - Formato: CSV (Valores Separados por Coma)
-#    - Estructura: fecha,horario,cupos_disponibles
-#    - Ejemplo:
-#      2025-11-15,11:00,80
-#      2025-11-15,12:00,100
-#
-# 2. reservas.txt
-#    - Propósito: Log de todas las reservas confirmadas.
-#    - Formato: CSV (Valores Separados por Coma)
-#    - Estructura: id_reserva,fecha_turno,horario_turno,dni_resp,nombre_resp,cant_total,total_pagado,medio_pago,detalle_asistentes
-#    - 'detalle_asistentes' es un string separado por '|'
-#    - Ejemplo:
-#      R1001,2025-11-15,11:00,30123456,Alexis Peralta,2,24000,Tarjeta de Crédito,(18;Si)|(10;No)
-#
-# 3. proximo_id.txt
-#    - Propósito: Almacena el próximo número de ID de reserva.
-#    - Formato: Texto plano (un solo número)
-#    - Ejemplo:
-#      1001
-#
+    #Alcances Administrar (Ya deben estar cargados):
+    # Roles (Nro Rol, Descripción)
+    # Personal (DNI, nombre, apellido, rol, telefono, email)
+    # Metodo de pago (Nro MedioDePago, Descripción)
+    # Tarifas (Nro Operación, Descripción, Costo)
 
 class AppLagosPark(tk.Tk):
     
