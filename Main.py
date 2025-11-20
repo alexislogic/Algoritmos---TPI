@@ -31,7 +31,7 @@ FILE_TARIFA = "tarifas.txt" #Acumula las diferentes transacciones efectuadas por
     # 2. reservas.txt /LISTO
     #    - Propósito: Log de todas las reservas confirmadas.
     #    - Formato: CSV (Valores Separados por Coma)
-    #    - Estructura: id_reserva,fecha_turno,horario_turno,dni_resp,nombre_resp,cant_total,total_pagado,medio_pago,detalle_asistentes
+    #    - Estructura: id_reserva,dni_resp,nombre_resp,apellido_resp,detalle_str,fecha,horario,cantidad,total_pagar,FechaSolicitud,HoraSolicitud,ESTADOS            
     #    - 'detalle_asistentes' es un string separado por '|'
     #    - Ejemplo:
     #      R1001,2025-11-15,11:00,30123456,Alexis Peralta,2,24000,Tarjeta de Crédito,(18;Si)|(10;No)
