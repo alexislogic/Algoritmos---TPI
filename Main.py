@@ -6,7 +6,7 @@ from tkinter import ttk
 from tkinter import messagebox
 
 # --- Constantes Globales
-PrecioEntrada = 12000 #Precio de cada entrada del parque.
+PrecioEntrada = 12000 #Precio de cada entrada del parque (Inicial).
 ESTADOS = ["Pendiente", "Abonado", "Cancelado"] #Tipos de estados posibles para la reserva. ESTO FALTA RESOLVER.
 HORARIOS_PARQUE = ['11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00']
 METODOS_DE_PAGO = ["Tarjeta de Crédito", "Tarjeta de Débito", "Transferencia"]
@@ -15,8 +15,8 @@ METODOS_DE_PAGO = ["Tarjeta de Crédito", "Tarjeta de Débito", "Transferencia"]
 FILE_TURNOS = "turnos.txt" #Archivo para almacenar los turnos disponibles.
 FILE_RESERVAS = "reservas.txt" #Almacena las reservas confirmadas.
 FILE_PROXIMO_ID = "proximo_id.txt" # Archivo para el contador de reservas
-FILE_CONSTANCIA = "constancia.txt" #Archivo con las constancias de pago.
-FILE_TARIFA = "tarifas.txt" #Acumula las diferentes transacciones efectuadas por la venta de entradas.
+FILE_CONSTANCIA = "constancia.txt" #Archivo con las constancias de pago, que contiene los datos de las transacciones.
+FILE_TARIFA = "tarifas.txt" #Contiene el valor de la tarifa por cada entrada.
 
 # --- Estructura de Archivos---
 #   Funcionamiento:
@@ -31,10 +31,10 @@ FILE_TARIFA = "tarifas.txt" #Acumula las diferentes transacciones efectuadas por
     # 2. reservas.txt /LISTO
     #    - Propósito: Log de todas las reservas confirmadas.
     #    - Formato: CSV (Valores Separados por Coma)
-    #    - Estructura: id_reserva,dni_resp,nombre_resp,apellido_resp,detalle_str,fecha,horario,cantidad,total_pagar,FechaSolicitud,HoraSolicitud,ESTADOS            
+    #    - Estructura: id_reserva,dni_resp,nombre_resp,apellido_resp,detalle_str,fecha,horario,cantidad,total_pagar,FechaSolicitud,HoraSolicitud,ESTADOS
     #    - 'detalle_asistentes' es un string separado por '|'
     #    - Ejemplo:
-    #      R1001,2025-11-15,11:00,30123456,Alexis Peralta,2,24000,Tarjeta de Crédito,(18;Si)|(10;No)
+    #       -
     #
     # 3. proximo_id.txt /LISTO
     #    - Propósito: Almacena el próximo número de ID de reserva.
@@ -100,6 +100,20 @@ class AppLagosPark(tk.Tk):
                 pass
         except FileNotFoundError:
             self.crear_archivo_vacio(FILE_PROXIMO_ID, "0") # Empezar contador en 0
+        
+        try:
+            # 4. Verificar tarifas.txt
+            with open(FILE_TARIFA, 'r') as f:
+                pass
+        except FileNotFoundError:
+            self.crear_archivo_vacio(FILE_TARIFA, str(PrecioEntrada))
+        
+        try:
+            # 5. Verificar constancia.txt
+            with open(FILE_CONSTANCIA, 'r') as f:
+                pass
+        except FileNotFoundError:
+            self.crear_archivo_vacio(FILE_CONSTANCIA)
 
     def crear_archivo_vacio(self, nombre_archivo, contenido_inicial=""): #Crea y setea el valor predeterminado de un archivo.
         """Crea un archivo vacío o con contenido inicial."""
@@ -424,8 +438,11 @@ class AppLagosPark(tk.Tk):
                 return
 
             # E. Datos de Pago
+            with open(FILE_TARIFA, 'r') as f:
+                Precio = int(f.read().strip())
+            
             medio_pago = self.combo_medio_pago.get()
-            total_pagar = cantidad * PrecioEntrada
+            total_pagar = cantidad * Precio
             id_reserva = self.obtener_proximo_id() # Usamos el contador
 
         #Abarca datos de funcionamiento:
@@ -474,9 +491,15 @@ class AppLagosPark(tk.Tk):
             HoraSolicitud = time.strftime("%H:%M:%S", hora_local) #OBTENER HORA ACTUAL
             detalle_str = "|".join([f"({p['edad']};{p['sabe_nadar']})" for p in lista_asistentes]) #VERIFICAR: ESTOY HAY QUE CAMBIARLO NI BIEN ESTE HECHA LA INTERFAZ.
             
-            linea_reserva = f"{id_reserva},{dni_resp},{nombre_resp} {apellido_resp},{detalle_str},{fecha},{horario},{cantidad},{total_pagar},{FechaSolicitud},{HoraSolicitud},{ESTADOS[0]}\n"
+            linea_reserva = f"{id_reserva},{dni_resp},{nombre_resp} {apellido_resp},{detalle_str},{fecha},{horario},{cantidad},{total_pagar},{FechaSolicitud},{HoraSolicitud},{ESTADOS[0]}\n" #Añadir nuevo registro al archivo FILE_RESERVAS. (Reserva)
+            linea_constancia = f"{id_reserva},{total_pagar},{medio_pago},{HoraSolicitud}\n" #Añadir registro nuevo al archivo de FILE_CONSTANCIA. (Pago)
+
             with open(FILE_RESERVAS, 'a') as f:
                 f.write(linea_reserva)
+            
+            with open(FILE_CONSTANCIA, 'a') as f:
+                f.write(linea_constancia)
+
 
         except IOError as e:
             messagebox.showerror("Error de Archivo", f"No se pudo guardar la reserva: {e}")
