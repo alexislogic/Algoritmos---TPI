@@ -44,7 +44,7 @@ FILE_TARIFA = "tarifas.txt" #Contiene el valor de la tarifa por cada entrada.
    
    #Alcances Gestionar (Se crean durante el programa): /LISTO
     # Solicitud de turno (Nro Solicitud, DatosResponsable, DatosAcompañantes, FechaTurno, HoraTurno, Cantidad de personas, Importe, FechaSolicitud, HoraSolicitud,  Estado)
-        #Se almacenara en una variable, para luego guardarse en el archivo reservas.
+        #Se almacenara en varias variables, para luego guardarse en el archivo reservas.
     # Constancia de pago (Nro Solicitud, Importe, Medio de pago, FechaPago, HoraPago)
 #
    #Alcances Administrar (Ya deben estar cargados): /LISTO
@@ -118,51 +118,17 @@ class AppLagosPark(tk.Tk):
     def crear_archivo_vacio(self, nombre_archivo, contenido_inicial=""): #Crea y setea el valor predeterminado de un archivo.
         """Crea un archivo vacío o con contenido inicial."""
         try:
-            with open(nombre_archivo, 'w') as f:
+            with open(nombre_archivo, 'x') as f:
                 f.write(contenido_inicial)
         except IOError as e:
             messagebox.showerror("Error de Archivo", f"No se pudo crear {nombre_archivo}: {e}")
 
     def crear_archivo_turnos_default(self): #Crea el archivo, los valores se registran segun las reservas.
         try:
-            with open(FILE_TURNOS, 'w') as f:
+            with open(FILE_TURNOS, 'x') as f:
                pass #No hace nada.
         except IOError as e:
             messagebox.showerror("Error de Archivo", f"No se pudo crear {FILE_TURNOS}: {e}")
-
-    #def crear_archivo_turnos_default_OLD(self): #Crea y setea el valor predeterminado del archivo turnos (De ejemplo).
-    #    """
-    #    Crea un archivo 'turnos.txt' con cupos fijos para fechas.
-    #    Entra aqui si es la primera vez que se crea el archivo.
-    #    """
-    #    lineas_turnos = [
-    #        # Datos para el dia actual:
-    #        "2025-11-15,11:00,100",
-    #        "2025-11-15,12:00,100",
-    #        "2025-11-15,13:00,100",
-    #        "2025-11-15,14:00,100",
-    #        "2025-11-15,15:00,100",
-    #       "2025-11-15,16:00,100",
-    #       "2025-11-15,17:00,100",
-    #        "2025-11-15,18:00,100",
-    #        "2025-11-15,19:00,100",
-    #        # Datos para siguiente dia:
-    #       "2025-11-16,11:00,100",
-    #       "2025-11-16,12:00,100",
-    #       "2025-11-16,13:00,100",
-    #        "2025-11-16,14:00,100",
-    #        "2025-11-16,15:00,100",
-    #       "2025-11-16,16:00,100",
-    #       "2025-11-16,17:00,100",
-    #       "2025-11-16,18:00,100",
-    #        "2025-11-16,19:00,100"
-    #    ]
-    #    try:
-    #        with open(FILE_TURNOS, 'w') as f:
-    #           for linea in lineas_turnos:
-    #               f.write(linea + "\n")
-    #    except IOError as e:
-    #        messagebox.showerror("Error de Archivo", f"No se pudo crear {FILE_TURNOS}: {e}")
 
     def crear_widgets(self):
         """Crea todos los componentes de la interfaz gráfica."""
@@ -260,6 +226,16 @@ class AppLagosPark(tk.Tk):
         self.btn_limpiar = ttk.Button(recibo_frame, text="Limpiar Formulario", command=self.limpiar_formulario, style='TButton')
         self.btn_limpiar.pack(fill=tk.X, ipady=5)
 
+        # --- Botón de Acceso a Gestión (Admin) ---
+        frame_admin = ttk.Frame(main_frame, padding="10")
+        frame_admin.pack(side=tk.BOTTOM, fill=tk.X)
+        
+        ttk.Separator(frame_admin, orient='horizontal').pack(fill='x', pady=10)
+        
+        btn_admin = ttk.Button(frame_admin, text="Acceso Encargado/Admin", 
+                               command=self.abrir_admin)
+        btn_admin.pack(side=tk.RIGHT)
+
     # --- Funciones de Lógica y Eventos ---
     # A medida que interactua con la interfaz, se ejecutan las funciones logicas.
 
@@ -285,11 +261,22 @@ class AppLagosPark(tk.Tk):
             messagebox.showerror("Datos Inválidos", "La fecha no puede estar vacía.")
             return
 
+        if not "/" in fecha_consulta:
+            messagebox.showerror("Datos Inválidos", "La fecha debe usar el formato ´dd/mm/yyyy´.")
+            return
+
         horarioActual = time.localtime()
         fecha_actual = time.strftime("%d/%m/%Y", horarioActual)
-        if fecha_consulta < fecha_actual: #Comprueba que la fecha sea valida. 
-            messagebox.showerror("Datos Inválidos", "La fecha debe ser mayor o igual a hoy.")
-            return
+        print(f"Esta es la fecha actual: {fecha_actual}, esta la fecha consulta: {fecha_consulta}")
+        fecha_actual_lista = fecha_actual.split("/")
+        fecha_consulta_lista = fecha_consulta.split("/")
+        for i in range(3): #Comparar fechas.
+            if int(fecha_consulta_lista[2-i]) < int(fecha_actual_lista[2-i]): #Verifica si es menor comparando desde el año hasta el dia.
+                messagebox.showerror("Datos Inválidos", "La fecha debe ser mayor o igual a hoy.")
+                return
+            elif int(fecha_consulta_lista[2-i]) > int(fecha_actual_lista[2-i]): #Si es mayor sale automaticamente.
+                break
+                
 
         #Define las variables a utilizar.
         horarios_Ocupados = [] #Crea una variable para almacenar los horarios que estan ocupados en esa fecha.
@@ -357,7 +344,7 @@ class AppLagosPark(tk.Tk):
             messagebox.showerror("Error Crítico", f"No se pudo actualizar el ID: {e}")
             # Continuamos de todas formas, pero el ID podría repetirse
             
-        return f"R{id_num}"
+        return f"{id_num}" #Retorna el id correspondiente.
 
     def on_confirmar_reserva(self):
         """
@@ -491,7 +478,7 @@ class AppLagosPark(tk.Tk):
             HoraSolicitud = time.strftime("%H:%M:%S", hora_local) #OBTENER HORA ACTUAL
             detalle_str = "|".join([f"({p['edad']};{p['sabe_nadar']})" for p in lista_asistentes]) #VERIFICAR: ESTOY HAY QUE CAMBIARLO NI BIEN ESTE HECHA LA INTERFAZ.
             
-            linea_reserva = f"{id_reserva},{dni_resp},{nombre_resp} {apellido_resp},{detalle_str},{fecha},{horario},{cantidad},{total_pagar},{FechaSolicitud},{HoraSolicitud},{ESTADOS[0]}\n" #Añadir nuevo registro al archivo FILE_RESERVAS. (Reserva)
+            linea_reserva = f"{id_reserva},{dni_resp},{nombre_resp} {apellido_resp},{detalle_str},{fecha},{horario},{cantidad},{total_pagar},{FechaSolicitud},{HoraSolicitud},{ESTADOS[1]}\n" #Añadir nuevo registro al archivo FILE_RESERVAS. (Reserva)
             linea_constancia = f"{id_reserva},{total_pagar},{medio_pago},{HoraSolicitud}\n" #Añadir registro nuevo al archivo de FILE_CONSTANCIA. (Pago)
 
             with open(FILE_RESERVAS, 'a') as f:
@@ -554,7 +541,213 @@ class AppLagosPark(tk.Tk):
         self.text_recibo.config(state="disabled")
         
         self.btn_confirmar.config(state="normal")
+    
+    def abrir_admin(self):
+        ventana_admin = AppAdmin(self) #Le pasamos a "self" como referencia.
+        ventana_admin.grab_set() # Para no tocar la ventana de ventas si estas en administracion.
 
+
+class AppAdmin(tk.Toplevel): #Administracion e informes.
+    """
+    Ventana exclusiva para el Encargado/Administrador.
+    Maneja Cancelaciones e Informes.
+    """
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.title("Lagos Park - Módulo de Gestión (Admin)")
+        self.geometry("800x600")
+        self.resizable(False, False)
+        
+        # Creamos un sistema de Pestañas (Tabs) para organizar
+        self.notebook = ttk.Notebook(self)
+        self.notebook.pack(fill='both', expand=True, padx=10, pady=10)
+        
+        # --- Pestaña 1: Cancelaciones ---
+        self.frame_cancelacion = ttk.Frame(self.notebook)
+        self.notebook.add(self.frame_cancelacion, text="  Gestionar Cancelaciones  ")
+        self.crear_interfaz_cancelaciones()
+        
+        # --- Pestaña 2: Informes ---
+        self.frame_informes = ttk.Frame(self.notebook)
+        self.notebook.add(self.frame_informes, text="  Informes y Estadísticas  ")
+        self.crear_interfaz_informes()
+
+    # ---------------------------------------------------------
+    # LÓGICA DE CANCELACIONES
+    # ---------------------------------------------------------
+    def crear_interfaz_cancelaciones(self):
+        panel = ttk.LabelFrame(self.frame_cancelacion, text="Buscar Reserva a Cancelar", padding=20)
+        panel.pack(fill="x", padx=20, pady=20)
+        
+        ttk.Label(panel, text="ID de Reserva (ej: 1001):").pack(side="left", padx=5)
+        self.entry_buscar_id = ttk.Entry(panel, width=15)
+        self.entry_buscar_id.pack(side="left", padx=5)
+        
+        ttk.Button(panel, text="<Buscar>", command=self.buscar_reserva).pack(side="left", padx=10)
+        
+        # Area de detalles
+        self.lbl_detalles = tk.Label(self.frame_cancelacion, text="", justify="left", font=("Consolas", 10), bg="#fff3e0", relief="solid")
+        self.lbl_detalles.pack(fill="both", expand=True, padx=20, pady=10)
+        
+        # Botón de acción (inicialmente deshabilitado)
+        self.btn_cancelar = ttk.Button(self.frame_cancelacion, text="X: CANCELAR RESERVA (Reintegro 80%)", state="disabled", command=self.ejecutar_cancelacion)
+        self.btn_cancelar.pack(fill="x", padx=20, pady=20, ipady=10)
+
+    def buscar_reserva(self):
+        id_buscado = self.entry_buscar_id.get().strip() #Obtiene el ID que ingreso.
+        self.reserva_encontrada = None # Variable temporal para guardar datos
+        
+        try:
+            with open(FILE_RESERVAS, 'r') as f:
+                for linea in f:
+                    partes = linea.strip().split(',') #Convierte el registro en una lista.
+                    # Estructura: id, dni, nombre, detalle, fecha, horario, cant, total, fechaSol, horaSol, estado
+                    
+                    if partes[0] == id_buscado:
+                        self.reserva_encontrada = partes
+                        break
+            
+            if self.reserva_encontrada:
+                # Agrupar datos en un string llamado "info"
+                estado = self.reserva_encontrada[10] # El estado es el último campo
+                info = f"ID: {self.reserva_encontrada[0]}\n"
+                info = info + f"Titular: {self.reserva_encontrada[2]} (DNI: {self.reserva_encontrada[1]})\n"
+                info = info + f"Fecha Turno: {self.reserva_encontrada[4]} a las {self.reserva_encontrada[5]}\n"
+                info = info + f"Monto Abonado: ${self.reserva_encontrada[7]}\n"
+                info = info + f"ESTADO ACTUAL: {estado}"
+                
+                self.lbl_detalles.config(text=info)
+                
+                # Solo permitir cancelar si no está cancelada ya
+                if "Cancelado" not in estado:
+                    self.btn_cancelar.config(state="normal")
+                else:
+                    self.btn_cancelar.config(state="disabled")
+                    messagebox.showinfo("Info", "Esta reserva ya fue cancelada previamente.")
+            else: #Casos particulares.
+                self.lbl_detalles.config(text="Reserva no encontrada.")
+                self.btn_cancelar.config(state="disabled")
+                
+        except FileNotFoundError:
+            messagebox.showerror("Error", "No existe el archivo de reservas.")
+
+    def ejecutar_cancelacion(self):
+        if not self.reserva_encontrada:
+            return
+            
+        # 1. Calcular devolución (Regla de Negocio: 80%)
+        total_abonado = float(self.reserva_encontrada[7])
+        reintegro = total_abonado * 0.80
+        
+        confirmacion = messagebox.askyesno("Confirmar Cancelación", 
+                                           f"Se devolverá ${reintegro:.2f} al cliente.\n¿Confirmar cancelación?")
+        if not confirmacion:
+            return
+
+        # 2. Actualizar archivo RESERVAS (Reescribir archivo)
+        id_target = self.reserva_encontrada[0]
+        fecha_turno = self.reserva_encontrada[4]
+        horario_turno = self.reserva_encontrada[5]
+        cantidad_personas = int(self.reserva_encontrada[6])
+
+        try:
+            with open(FILE_RESERVAS, 'r') as f: #Entra en modo lecutra para no borrarlo.
+                lineas = f.readlines()
+            
+            with open(FILE_RESERVAS, 'w') as f: #Busca la reserva correspondiente.
+                for linea in lineas:
+                    partes = linea.strip().split(',')
+
+                    if partes[0] == id_target: #Cuando encuentre el ID.
+                        # Modificamos el estado (último elemento)
+                        partes[10] = "Cancelado"
+                        nueva_linea = ",".join(partes) + "\n"
+                        f.write(nueva_linea) #Añadimos la linea modificada.
+                    else: #Sigue escribiendo la nueva version del archivo.
+                        f.write(linea)
+            
+            # 3. Devolver Cupos a TURNOS.TXT
+            # Leemos turnos, buscamos fecha/hora y sumamos cupos
+            turnos_nuevos = []
+            with open(FILE_TURNOS, 'r') as f:
+                for linea in f:
+                    partes = linea.strip().split(',') #Convertimos el registro en una lista.
+                    if partes[0] == fecha_turno and partes[1] == horario_turno: #Comparamos fecha y hora del turno.
+                        cupos_actuales = int(partes[2])
+                        nuevo_cupo = cupos_actuales + cantidad_personas #Sumamos cupos disponibles luego de la cancelacion.
+                        turnos_nuevos.append(f"{fecha_turno},{horario_turno},{nuevo_cupo}\n") #Añadimos la linea modificada.
+                    else: #Sigue escribiendo la nueva verison del archivo.
+                        turnos_nuevos.append(linea)
+            
+            with open(FILE_TURNOS, 'w') as f:
+                f.writelines(turnos_nuevos)
+
+            messagebox.showinfo("Éxito", "Reserva cancelada, cupos liberados y reintegro calculado.")
+            self.lbl_detalles.config(text="--- OPERACIÓN FINALIZADA ---")
+            self.btn_cancelar.config(state="disabled")
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Fallo al cancelar: {e}")
+
+    # ---------------------------------------------------------
+    # LÓGICA DE INFORMES
+    # ---------------------------------------------------------
+    def crear_interfaz_informes(self):
+        panel = ttk.LabelFrame(self.frame_informes, text="Generador de Reportes", padding=10)
+        panel.pack(fill="x", padx=10, pady=10)
+        
+        ttk.Label(panel, text="Tipo de Informe:").pack(side="left", padx=5)
+        self.combo_tipo_informe = ttk.Combobox(panel, values=["Recaudación Mensual", "Reservas por Estado"], state="readonly")
+        self.combo_tipo_informe.current(0)
+        self.combo_tipo_informe.pack(side="left", padx=5)
+        
+        ttk.Button(panel, text="Generar", command=self.generar_reporte).pack(side="left", padx=10)
+        
+        # Área de texto para el reporte
+        self.txt_reporte = tk.Text(self.frame_informes, font=("Consolas", 9), height=20)
+        self.txt_reporte.pack(fill="both", expand=True, padx=10, pady=10)
+
+    def generar_reporte(self):
+        tipo = self.combo_tipo_informe.get()
+        self.txt_reporte.delete("1.0", tk.END)
+        
+        texto_reporte = f"--- REPORTE: {tipo.upper()} ---\n"
+        texto_reporte += f"Generado el: {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}\n\n"
+        
+        recaudacion_total = 0
+        conteo_estados = {"Pendiente": 0, "Abonado": 0, "Cancelado": 0}
+        
+        try:
+            with open(FILE_RESERVAS, 'r') as f:
+                for linea in f:
+                    linea = linea.strip()
+                    if not linea: continue
+                    p = linea.split(',')
+                    
+                    # Estructura: ..., total(idx 7), ..., estado(idx 10)
+                    monto = float(p[7])
+                    estado = p[10]
+                    
+                    if estado in conteo_estados:
+                        conteo_estados[estado] += 1
+                    
+                    # Solo sumamos si NO está cancelado (Criterio de recaudación neta)
+                    if estado != "Cancelado":
+                        recaudacion_total += monto
+
+            if tipo == "Recaudación Mensual":
+                # Nota: Aquí podrías filtrar por fecha si quisieras hacerlo más complejo
+                texto_reporte += f"Total Recaudado (Neto): ${recaudacion_total:,.2f}\n"
+                texto_reporte += "(Excluye reservas canceladas)\n"
+                
+            elif tipo == "Reservas por Estado":
+                for est, cant in conteo_estados.items():
+                    texto_reporte += f"{est}: {cant} reservas\n"
+            
+            self.txt_reporte.insert(tk.END, texto_reporte)
+            
+        except FileNotFoundError:
+            self.txt_reporte.insert(tk.END, "No se encontró el archivo de reservas.")
 
 if __name__ == "__main__":
     app = AppLagosPark()
