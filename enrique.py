@@ -17,6 +17,7 @@ FILE_RESERVAS = "reservas.txt" #Almacena las reservas confirmadas.
 FILE_PROXIMO_ID = "proximo_id.txt" # Archivo para el contador de reservas
 FILE_CONSTANCIA = "constancia.txt" #Archivo con las constancias de pago, que contiene los datos de las transacciones.
 FILE_TARIFA = "tarifas.txt" #Contiene el valor de la tarifa por cada entrada.
+FILE_CANCELACION = "cancelacion.txt" #Contiene las cancelaciones.
 
 # --- Estructura de Archivos---
 #   Funcionamiento:
@@ -50,6 +51,15 @@ FILE_TARIFA = "tarifas.txt" #Contiene el valor de la tarifa por cada entrada.
    #Alcances Administrar (Ya deben estar cargados): /LISTO
     # Metodo de pago (Nro MedioDePago, Descripción)
     # Tarifas (Nro Operación, Descripción, Costo)
+    # Cancelaciones (Nro Solicitud, ImporteTotal, ImporteDevuelto, FechaCancelación, HoraCancelación, Motivo)
+
+def es_fecha_valida(texto): #Verifica que la fecha sea valida en formato.
+        try:
+            # Intenta crear la fecha. Si el formato está mal o el día no existe (ej: 30/02), falla.
+            datetime.datetime.strptime(texto, '%d/%m/%Y')
+            return True
+        except ValueError:
+            return False
 
 class AppLagosPark(tk.Tk): 
     
@@ -61,6 +71,8 @@ class AppLagosPark(tk.Tk):
         self.resizable(False, False)
         
         # Estilos
+        self.style = ttk.Style()
+        self.style.theme_use('clam')
         self.style = ttk.Style(self)
         self.style.configure('TLabel', font=('Arial', 10))
         self.style.configure('TButton', font=('Arial', 10, 'bold'))
@@ -93,6 +105,13 @@ class AppLagosPark(tk.Tk):
                 pass
         except FileNotFoundError:
             self.crear_archivo_vacio(FILE_RESERVAS)
+        
+        try:
+            # 2. Verificar reservas.txt
+            with open(FILE_CANCELACION, 'r') as f:
+                pass
+        except FileNotFoundError:
+            self.crear_archivo_vacio(FILE_CANCELACION)
             
         try:
             # 3. Verificar proximo_id.txt
@@ -261,7 +280,7 @@ class AppLagosPark(tk.Tk):
             messagebox.showerror("Datos Inválidos", "La fecha no puede estar vacía.")
             return
 
-        if not "/" in fecha_consulta:
+        if not es_fecha_valida(fecha_consulta):
             messagebox.showerror("Datos Inválidos", "La fecha debe usar el formato ´dd/mm/yyyy´.")
             return
 
@@ -375,6 +394,10 @@ class AppLagosPark(tk.Tk):
             
             if not all([dni_resp, nombre_resp, apellido_resp]): #Comprueba que los datos se ingresen.
                 messagebox.showerror("Datos Incompletos", "Por favor, complete todos los datos del responsable.")
+                return
+            
+            if not "@" in email_resp:
+                messagebox.showerror("El mail debe ser valido.")
                 return
 
             if edad_resp < 18: #Comprueba que sea mayor de edad. #VERIFICAR: MODIFICAR POR FECHA DE NACIMIENTO.
@@ -593,7 +616,17 @@ class AppAdmin(tk.Toplevel): #Administracion e informes.
         self.btn_cancelar = ttk.Button(self.frame_cancelacion, text="X: CANCELAR RESERVA (Reintegro 80%)", state="disabled", command=self.ejecutar_cancelacion)
         self.btn_cancelar.pack(fill="x", padx=20, pady=20, ipady=10)
 
+        # --- APARTADO PARA MOTIVO ---
+        frame_motivo = ttk.Frame(self.frame_cancelacion)
+        frame_motivo.pack(fill="x", padx=20, pady=5)
+        
+        ttk.Label(frame_motivo, text="Motivo de Cancelación:", font=('Arial', 10, 'bold')).pack(anchor="w")
+        self.entry_motivo = ttk.Entry(frame_motivo)
+        self.entry_motivo.pack(fill="x", pady=5)
+        # ----------------------------------
+
     def buscar_reserva(self):
+        self.entry_motivo.delete(0, tk.END) #Limpiar motivo.
         id_buscado = self.entry_buscar_id.get().strip() #Obtiene el ID que ingreso.
         self.reserva_encontrada = None # Variable temporal para guardar datos
         
@@ -634,7 +667,7 @@ class AppAdmin(tk.Toplevel): #Administracion e informes.
     def ejecutar_cancelacion(self):
         if not self.reserva_encontrada:
             return
-            
+
         # 1. Calcular devolución (Regla de Negocio: 80%)
         total_abonado = float(self.reserva_encontrada[7])
         reintegro = total_abonado * 0.80
@@ -649,6 +682,7 @@ class AppAdmin(tk.Toplevel): #Administracion e informes.
         fecha_turno = self.reserva_encontrada[4]
         horario_turno = self.reserva_encontrada[5]
         cantidad_personas = int(self.reserva_encontrada[6])
+        motivo = self.entry_motivo.get().strip()
 
         try:
             with open(FILE_RESERVAS, 'r') as f: #Entra en modo lecutra para no borrarlo.
@@ -678,9 +712,18 @@ class AppAdmin(tk.Toplevel): #Administracion e informes.
                         turnos_nuevos.append(f"{fecha_turno},{horario_turno},{nuevo_cupo}\n") #Añadimos la linea modificada.
                     else: #Sigue escribiendo la nueva verison del archivo.
                         turnos_nuevos.append(linea)
-            
+
+            horarioActual = time.strftime("%H:%M:%S", time.localtime()) #Horario actual de la transaccion.
+            fecha_actual = time.strftime("%d/%m/%Y", time.localtime()) #Fecha actual de la transaccion.
+
+            linea_cancelacion = []
+            linea_cancelacion = (f"{id_target},{total_abonado},{reintegro},{fecha_actual},{horarioActual},{motivo}")
+
             with open(FILE_TURNOS, 'w') as f:
                 f.writelines(turnos_nuevos)
+
+            with open(FILE_CANCELACION, 'a') as f:
+                f.writelines(linea_cancelacion)
 
             messagebox.showinfo("Éxito", "Reserva cancelada, cupos liberados y reintegro calculado.")
             self.lbl_detalles.config(text="--- OPERACIÓN FINALIZADA ---")
