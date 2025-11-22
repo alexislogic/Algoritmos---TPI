@@ -64,7 +64,6 @@ def es_fecha_valida(texto): #Verifica que la fecha sea valida en formato.
 class AppLagosPark(tk.Tk):
     def __init__(self):
         super().__init__()
-
         #Definimos flexibilidad de ventana.
         self.title("TPI Algoritmos - Venta de Entradas 'Lagos Park'")
         screen_width = self.winfo_screenwidth()
@@ -96,7 +95,7 @@ class AppLagosPark(tk.Tk):
 
         self.cargar_datos_iniciales()
         self.crear_widgets()
-
+    
     def cargar_datos_iniciales(self): #Carga los datos de los archivos.
         """
         Verifica si los archivos de datos existen. Si no, los crea.
@@ -128,7 +127,7 @@ class AppLagosPark(tk.Tk):
             with open(FILE_PROXIMO_ID, 'r') as f:
                 pass
         except FileNotFoundError:
-            self.crear_archivo_vacio(FILE_PROXIMO_ID, "0") # Empezar contador en 0
+            self.crear_archivo_vacio(FILE_PROXIMO_ID, "1") # Empezar contador en 1
         
         try:
             # 4. Verificar tarifas.txt
@@ -247,6 +246,15 @@ class AppLagosPark(tk.Tk):
         self.text_acompanantes.pack(fill=tk.X, pady=2)
         ttk.Label(frame_acomp, text="Ej: 12/05/2015, Si", style='Small.TLabel').pack(anchor=tk.W)
 
+        # --- Botón de Acceso a Gestión (Admin) ---
+        frame_admin = ttk.Frame(main_frame) # Quitamos padding excesivo
+        frame_admin.pack(side=tk.BOTTOM, fill=tk.X, pady=5)
+        
+        ttk.Separator(frame_admin, orient='horizontal').pack(fill='x', pady=2)
+        
+        btn_admin = ttk.Button(frame_admin, text="Acceso Encargado/Admin", 
+                               command=self.abrir_admin)
+        btn_admin.pack(side=tk.LEFT)
         
         # --- Frame Derecho (Recibo) ---
         recibo_frame = ttk.Frame(main_frame)
@@ -263,15 +271,6 @@ class AppLagosPark(tk.Tk):
         self.btn_limpiar = ttk.Button(recibo_frame, text="Limpiar Formulario", command=self.limpiar_formulario, style='TButton')
         self.btn_limpiar.pack(fill=tk.X, ipady=4)
 
-        # --- Botón de Acceso a Gestión (Admin) ---
-        frame_admin = ttk.Frame(main_frame) # Quitamos padding excesivo
-        frame_admin.pack(side=tk.BOTTOM, fill=tk.X, pady=5)
-        
-        ttk.Separator(frame_admin, orient='horizontal').pack(fill='x', pady=2)
-        
-        btn_admin = ttk.Button(frame_admin, text="Acceso Encargado/Admin", 
-                               command=self.abrir_admin)
-        btn_admin.pack(side=tk.RIGHT)
 
     # --- Funciones de Lógica y Eventos ---
     # A medida que interactua con la interfaz, se ejecutan las funciones logicas.
@@ -606,6 +605,7 @@ class AppLagosPark(tk.Tk):
 
         self.btn_confirmar.config(state="disabled")
         messagebox.showinfo("Éxito", f"Reserva {id_reserva} guardada correctamente.")
+
 
     def limpiar_formulario(self):
         """Limpia todos los campos para una nueva venta."""
