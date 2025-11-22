@@ -62,14 +62,26 @@ def es_fecha_valida(texto): #Verifica que la fecha sea valida en formato.
             return False
 
 class AppLagosPark(tk.Tk): 
-    
-    def __init__(self): #DEFINIDOR DE BLOQUES.
-        super().__init__()
+    super().__init__()
 
+        #Definimos flexibilidad de ventana.
         self.title("TPI Algoritmos - Venta de Entradas 'Lagos Park'")
-        self.geometry("900x700")
-        self.resizable(False, False)
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        self.geometry(f"{int(screen_width*0.6)}x{int(screen_height*0.6)}") # 80% de la pantalla
+        self.resizable(True, True)
         
+        # Intento de Maximizar Automáticamentes
+        try:
+            # Para Windows
+            self.state('zoomed')
+        except:
+            # Para Linux (Si falla el anterior)
+            try:
+                self.attributes('-zoomed', True)
+            except:
+                pass # Si falla todo, igual ya seteamos el geometry grande arriba
+
         # Estilos
         self.style = ttk.Style()
         self.style.theme_use('clam')
@@ -81,9 +93,6 @@ class AppLagosPark(tk.Tk):
         self.style.configure('Header.TLabel', font=('Arial', 14, 'bold'))
         self.style.configure('Small.TLabel', font=('Arial', 8, 'italic'))
 
-        # Variables de estado
-        self.costo_total = tk.DoubleVar(value=0.0)
-        
         self.cargar_datos_iniciales()
         self.crear_widgets()
 
@@ -530,7 +539,7 @@ class AppLagosPark(tk.Tk):
             hora_local = time.localtime()
             FechaSolicitud = time.strftime("%d/%m/%Y", hora_local) #OBTENER FECHA ACTUAL
             HoraSolicitud = time.strftime("%H:%M:%S", hora_local) #OBTENER HORA ACTUAL
-            detalle_str = "|".join([f"({p['Fecha_nacimiento']};{p['sabe_nadar']})" for p in lista_asistentes]) #VERIFICAR: ESTOY HAY QUE CAMBIARLO NI BIEN ESTE HECHA LA INTERFAZ.
+            detalle_str = "|".join([f"({p['Fecha_nacimiento']};{p['sabe_nadar']})" for p in lista_asistentes]) #DETALLE DE LOS ACOMPAÑANTES EN TEXTO.
 
             linea_reserva = f"{id_reserva},{dni_resp},{nombre_resp} {apellido_resp},{detalle_str},{fecha},{horario},{cantidad},{total_pagar},{FechaSolicitud},{HoraSolicitud},{ESTADOS[1]}\n" #Añadir nuevo registro al archivo FILE_RESERVAS. (Reserva)
             linea_constancia = f"{id_reserva},{total_pagar},{medio_pago},{HoraSolicitud}\n" #Añadir registro nuevo al archivo de FILE_CONSTANCIA. (Pago)
