@@ -882,13 +882,6 @@ class AppAdmin(tk.Toplevel): #Administracion e informes.
                     if estado in conteo_estados:
                         conteo_estados[estado] += 1
 
-                    try:
-                        # Convertimos el texto del archivo a un objeto fecha real
-                        fecha_registro = datetime.datetime.strptime(fecha_str.strip(), "%d/%m/%Y")
-                    except ValueError:
-                        # Si la fecha está mal escrita o el formato no coincide, saltamos la línea
-                        continue
-
                     # --- ZONA DE FILTRO ---
                     flag = 0 #Sirve para avisar si la fecha es valida o no.
                     fecha_actual_lista = hoy.split("/")
@@ -897,9 +890,14 @@ class AppAdmin(tk.Toplevel): #Administracion e informes.
                     for i in range(3): #Comparar fechas.
                         if int(fecha_reserva_lista[2-i]) < int(hace_un_mes_lista[2-i]): #Verifica si es menor comparando desde el año hasta el dia.
                             flag = 1
-                        
+                        elif int(fecha_reserva_lista[2-i]) > int(hace_un_mes_lista[2-i]):
+                            break
+                    
+                    for i in range(3): #Comparar fechas.
                         if int(fecha_reserva_lista[2-i]) > int(fecha_actual_lista[2-i]): #Si es mayor sale automaticamente.
-                            flag = 1    
+                            flag = 1
+                        elif int(fecha_reserva_lista[2-i]) < int(fecha_actual_lista[2-i]): #Si es mayor sale automaticamente.
+                            break
                     
                     if flag == 0:
                         # Si pasa el filtro, recién ahí procesamos el dinero
