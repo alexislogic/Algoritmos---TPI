@@ -27,6 +27,17 @@ def es_fecha_valida(texto): #Verifica que la fecha sea valida en formato.
         except ValueError:
             return False
 
+def verificar_horario_valido(horario): #Verifica si el horario a consultar esta disponbile o ese turno ya no esta disponible.
+    hora_actual = datetime.datetime.now().time() #Obtenemos el horario actual.
+    horario_seleccionado = datetime.datetime.strptime(horario, "%H:%M").time() #Transformamos la cadena de la hora en un objeto comparable.
+
+    if hora_actual > horario_seleccionado: #Verifica si el horario a seleccionar esta disponible para la hora actual.
+        return True #El horario seleccionado aun esta disponible.
+    else:
+        return False #El horario seleccionado NO esta disponible.
+
+    
+
 class AppLagosPark(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -260,7 +271,9 @@ class AppLagosPark(tk.Tk):
         Lee el archivo 'turnos.txt' y filtra los horarios que tienen
         cupo suficiente para la fecha y cantidad de personas indicadas.
         """
-
+        #Reiniciamos el cuadro de opciones.
+        self.combo_horario['values'] = []
+        self.combo_horario.set('')
         # Comprueba que los datos sean correctos:
         try:
             cantidad = int(self.entry_cantidad.get())
@@ -283,7 +296,6 @@ class AppLagosPark(tk.Tk):
 
         horarioActual = time.localtime()
         fecha_actual = time.strftime("%d/%m/%Y", horarioActual)
-        print(f"Esta es la fecha actual: {fecha_actual}, esta la fecha consulta: {fecha_consulta}")
         fecha_actual_lista = fecha_actual.split("/")
         fecha_consulta_lista = fecha_consulta.split("/")
         for i in range(3): #Comparar fechas.
@@ -292,12 +304,20 @@ class AppLagosPark(tk.Tk):
                 return
             elif int(fecha_consulta_lista[2-i]) > int(fecha_actual_lista[2-i]): #Si es mayor sale automaticamente.
                 break
-                
+        
 
         #Define las variables a utilizar.
+        confirmar_horarios = True #Bandera para confirmar si hay que verificar los horarios.
+        
+        #Verificar si son iguales.
+        for i in range(3): #Verificar igualdad.
+            if int(fecha_actual_lista[i]) != int(fecha_consulta_lista[i]): #Verificamos igualdad.
+                confirmar_horarios = False #Si no se cumple, entonces los horarios son de dias siguientes a hoy.
+        
         horarios_Ocupados = [] #Crea una variable para almacenar los horarios que estan ocupados en esa fecha.
         horarios_Disponibles = [] #Crea una variable para almacenar los horarios que estan disponibles en esa fecha.
         flag = False #Bandera para indicar cuando un horario no este disponible.
+       
         #Busca los horarios NO disponibles.
         try:
             with open(FILE_TURNOS, 'r') as f:
@@ -306,20 +326,30 @@ class AppLagosPark(tk.Tk):
                     if not linea:
                         continue
                     
+                    flag = False
+                    
                     partes = linea.split(',') # Lo almacena en una lista: [fecha, horario, cupos]
                     
                     if len(partes) != 3:
                         continue # Ignorar líneas corruptas
 
+                    #Obtiene los datos del archivo.
                     fecha_archivo = partes[0]
                     horario_archivo = partes[1]
                     cupos_archivo = int(partes[2])
-                    
-                    if fecha_archivo == fecha_consulta and cupos_archivo < cantidad: #Si coincide la fecha y no hay lugares disponibles.
+
+                    if fecha_archivo == fecha_consulta and cupos_archivo < cantidad: #Si coincide la fecha y no hay lugares disponibles y no se guardo anteriormente.
                         horarios_Ocupados.append(horario_archivo)
             
-            if len(horarios_Ocupados) > len(HORARIOS_PARQUE): #Si todos los turnos fueron ocupados.
-                messagebox.showwarning("Sin Cupo", f"No hay turnos disponibles para {cantidad} personas en la fecha {fecha_consulta}.")
+            if confirmar_horarios: #Si la fecha es la misma que hoy.
+                for i in range(len(HORARIOS_PARQUE)):
+                    if  verificar_horario_valido(HORARIOS_PARQUE[i]) and HORARIOS_PARQUE[i] not in horarios_Ocupados: #Si no es valido, entonces incluirlo en la lista de "no validos".
+                        horarios_Ocupados.append(HORARIOS_PARQUE[i])
+
+            horario_actual_str = datetime.datetime.now().strftime("%H:%M") #Para mostrar en los posibles mensajes de error.
+
+            if len(horarios_Ocupados) >= len(HORARIOS_PARQUE): #Si todos los turnos fueron ocupados.
+                messagebox.showwarning("Sin Cupo", f"No hay turnos disponibles para {cantidad} personas en la fecha {fecha_consulta} a la hora {horario_actual_str}.")
                 self.combo_horario['values'] = []
                 self.combo_horario.set('')
             else: #Obtener turnos disponibles y mostrarlos.
@@ -373,15 +403,57 @@ class AppLagosPark(tk.Tk):
             # A. Datos de Consulta
             cantidad = int(self.entry_cantidad.get())
             fecha = self.entry_fecha.get()
+            horarioActual = time.localtime()
             horario_seleccionado = self.combo_horario.get()
             if not horario_seleccionado: #Verificacion que exista.
                 messagebox.showerror("Error", "Por favor, verifique la disponibilidad y seleccione un horario.")
                 return
             horario = horario_seleccionado
-            
-            print(f"El horario seleccionado actual es: {horario}")
             horarioActual = time.localtime()
             fecha_actual = time.strftime("%d/%m/%Y", horarioActual)
+
+            # Comprueba que los datos sean correctos:
+            fecha_consulta = fecha
+            try:
+                cantidad = int(self.entry_cantidad.get())
+                fecha_consulta = self.entry_fecha.get()
+            except ValueError:
+                messagebox.showerror("Datos Inválidos", "La cantidad de personas debe ser un número entero.")
+                return
+
+            if cantidad <= 0:
+                messagebox.showerror("Datos Inválidos", "La cantidad de personas debe ser mayor a 0.")
+                return
+                
+            if not fecha_consulta:
+                messagebox.showerror("Datos Inválidos", "La fecha no puede estar vacía.")
+                return
+
+            if not es_fecha_valida(fecha_consulta):
+                messagebox.showerror("Datos Inválidos", "La fecha debe usar el formato ´dd/mm/aaaa´.")
+                return
+
+            horarioActual = time.localtime()
+            fecha_actual = time.strftime("%d/%m/%Y", horarioActual)
+            fecha_actual_lista = fecha_actual.split("/")
+            fecha_consulta_lista = fecha_consulta.split("/")
+            for i in range(3): #Comparar fechas.
+                if int(fecha_consulta_lista[2-i]) < int(fecha_actual_lista[2-i]): #Verifica si es menor comparando desde el año hasta el dia.
+                    messagebox.showerror("Datos Inválidos", "La fecha debe ser mayor o igual a hoy.")
+                    return
+                elif int(fecha_consulta_lista[2-i]) > int(fecha_actual_lista[2-i]): #Si es mayor sale automaticamente.
+                    break
+            
+            confirmar_horarios = True #Bandera para confirmar si hay que verificar los horarios.
+            #Verificar si son iguales.
+            for i in range(3): #Verificar igualdad.
+                if int(fecha_actual_lista[i]) != int(fecha_consulta_lista[i]): #Verificamos igualdad.
+                    confirmar_horarios = False #Si no se cumple, entonces los horarios son de dias siguientes a hoy.
+            
+            if confirmar_horarios: #Si se deben verificar los horarios, los comparamos con la hora actual.
+                if verificar_horario_valido(horario_seleccionado): #Si no es valido en el horario actual, ejecutamos mensaje de error.
+                    messagebox.showerror("Datos Inválidos", "El horario elegido ya no esta disponible.")
+                    return 
 
             # B. Datos Responsable
             dni_resp = self.entry_dni.get()
