@@ -462,6 +462,9 @@ class AppLagosPark(tk.Tk):
                     fecha_actual = time.strftime("%d/%m/%Y", horarioActual)
                     edad_acomp = partes[0].split("/")
                     sabe_nadar_acomp = partes[1].strip().capitalize()
+                    if len(edad_acomp)!=3 or len(edad_acomp[0])!=2 or len(edad_acomp[1])!=2 or len(edad_acomp[2])!=4:
+                        messagebox.showerror("Error de formato", "ingrese fecha (DD,MM,AAAA),si/no")
+                        return
 
                     fecact= fecha_actual.split("/")
                     for j in range(3):
