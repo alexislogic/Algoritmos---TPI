@@ -83,18 +83,29 @@ class AppLagosPark(tk.Tk):
                 pass # Si falla todo, igual ya seteamos el geometry grande arriba
 
         # Estilos
+        # --- ESTILOS ---
         self.style = ttk.Style()
         self.style.theme_use('clam')
-        self.style = ttk.Style(self)
-        self.style.configure('TLabel', font=('Arial', 10))
-        self.style.configure('TFrame', background='#E0F4FF') 
-        self.style.configure('TButton',background='#6EC6FF')
-        self.style.map('TButton',background=[('active', '#e7d5ff')])
+        
+        # Definimos el color base para no escribirlo mil veces
+        COLOR_FONDO = '#E0F4FF'
+        
+        # 1. Estilos Generales
+        self.style.configure('TLabel', background=COLOR_FONDO, font=('Arial', 10))
+        self.style.configure('TFrame', background=COLOR_FONDO)
+        self.style.configure('TButton', background='#6EC6FF')
+        self.style.map('TButton', background=[('active', '#e7d5ff')])
+        
+        # 2. IMPORTANTE: Para los recuadros con título (1. Datos del turno, etc)
+        self.style.configure('TLabelframe', background=COLOR_FONDO, bordercolor=COLOR_FONDO)
+        self.style.configure('TLabelframe.Label', background=COLOR_FONDO, font=('Arial', 10, 'bold'))
+        
+        # 3. Para el Checkbox "¿Sabe Nadar?"
+        self.style.configure('TCheckbutton', background=COLOR_FONDO, font=('Arial', 10))
+        
+        # 4. Entradas y otros
         self.style.configure('TEntry', font=('Arial', 10))
         self.style.configure('TCombobox', font=('Arial', 10))
-        self.style.configure('Header.TLabel', font=('Arial', 14, 'bold'))
-        self.style.configure('Small.TLabel', font=('Arial', 8, 'italic'))
-        
 
         self.cargar_datos_iniciales()
         self.crear_widgets()
@@ -663,8 +674,10 @@ class AppAdmin(tk.Toplevel): #Administracion e informes.
     def __init__(self, parent):
         super().__init__(parent)
         self.title("Lagos Park - Módulo de Gestión (Admin)")
-        self.geometry("800x600")
-        self.resizable(False, False)
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        self.geometry(f"{int(screen_width*0.4)}x{int(screen_height*0.4)}") # 80% de la pantalla
+        self.resizable(True, True)
         
         # Creamos un sistema de Pestañas (Tabs) para organizar
         self.notebook = ttk.Notebook(self)
@@ -715,15 +728,21 @@ class AppAdmin(tk.Toplevel): #Administracion e informes.
         id_buscado = self.entry_buscar_id.get().strip() #Obtiene el ID que ingreso.
         self.reserva_encontrada = None # Variable temporal para guardar datos
         
+        if not id_buscado.isdigit():
+            messagebox.showerror("Datos invalidos", "Ingrese SOLO numeros.")
+            return
+
+        if int(id_buscado) < 1:
+            messagebox.showerror("Datos invalidos", "El valor minimo es 1.")
+            return
+
         try:
-            with open(FILE_RESERVAS, 'r') as f:
-                for linea in f:
-                    partes = linea.strip().split(',') #Convierte el registro en una lista.
-                    # Estructura: id, dni, nombre, detalle, fecha, horario, cant, total, fechaSol, horaSol, estado
-                    
-                    if partes[0] == id_buscado:
-                        self.reserva_encontrada = partes
-                        break
+            with open(FILE_RESERVAS, 'r') as f: #BUSQUEDA EFICIENTE DENTRO DEL ARCHIVO POR INDICE.
+                lineas = f.readlines()
+                if int(id_buscado) > len(lineas):
+                    messagebox.showerror("Datos invalidos", "No existe ese numero de registro.")
+                    return
+                self.reserva_encontrada = lineas[int(id_buscado)-1].strip().split(',') #Busca en la linea especifica usando el indice.
             
             if self.reserva_encontrada:
                 # Agrupar datos en un string llamado "info"
@@ -842,9 +861,13 @@ class AppAdmin(tk.Toplevel): #Administracion e informes.
         texto_reporte = f"--- REPORTE: {tipo.upper()} ---\n"
         texto_reporte += f"Generado el: {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}\n\n"
         
+        # Definimos las fechas de control antes de abrir el archivo para no recalcular en cada vuelta
+        hoy = datetime.datetime.now()
+        hace_un_mes = hoy - datetime.timedelta(days=30) #Tomamos en cuenta los 30 dias anteriores.
+
         recaudacion_total = 0
         conteo_estados = {"Pendiente": 0, "Abonado": 0, "Cancelado": 0}
-        
+
         try:
             with open(FILE_RESERVAS, 'r') as f:
                 for linea in f:
@@ -852,28 +875,39 @@ class AppAdmin(tk.Toplevel): #Administracion e informes.
                     if not linea: continue
                     p = linea.split(',')
                     
-                    # Estructura: ..., total(idx 7), ..., estado(idx 10)
-                    monto = float(p[7])
-                    estado = p[10]
+                    # --- ZONA DE DATOS ---
+                    fecha_str = p[8] 
                     
-                    if estado in conteo_estados:
-                        conteo_estados[estado] += 1
-                    
-                    # Solo sumamos si NO está cancelado (Criterio de recaudación neta)
-                    if estado != "Cancelado":
-                        recaudacion_total += monto
+                    try:
+                        # Convertimos el texto del archivo a un objeto fecha real
+                        fecha_registro = datetime.strptime(fecha_str, "%d/%m/%Y")
+                    except ValueError:
+                        # Si la fecha está mal escrita o el formato no coincide, saltamos la línea
+                        continue
 
-            if tipo == "Recaudación Mensual":
-                # Nota: Aquí podrías filtrar por fecha si quisieras hacerlo más complejo
-                texto_reporte += f"Total Recaudado (Neto): ${recaudacion_total:,.2f}\n"
-                texto_reporte += "(Excluye reservas canceladas)\n"
+                    # --- ZONA DE FILTRO ---
+                    if hace_un_mes <= fecha_registro <= hoy:
+                        
+                        # Si pasa el filtro, recién ahí procesamos el dinero
+                        monto = float(p[7]) # Total a pagar
+                        estado = p[10]      # Estado
+                        
+                        if estado in conteo_estados:
+                            conteo_estados[estado] += 1
+                        
+                        if estado != "Cancelado":
+                            recaudacion_total += monto
+
+                if tipo == "Recaudación Mensual (Tomando los 30 dias anteriores)":
+                    # Nota: Aquí podrías filtrar por fecha si quisieras hacerlo más complejo
+                    texto_reporte += f"Total Recaudado (Neto): ${recaudacion_total:,.2f}\n"
+                    texto_reporte += "(Excluye reservas canceladas)\n"
+                    
+                elif tipo == "Reservas por Estado":
+                    for est, cant in conteo_estados.items():
+                        texto_reporte += f"{est}: {cant} reservas\n"
                 
-            elif tipo == "Reservas por Estado":
-                for est, cant in conteo_estados.items():
-                    texto_reporte += f"{est}: {cant} reservas\n"
-            
-            self.txt_reporte.insert(tk.END, texto_reporte)
-            
+                self.txt_reporte.insert(tk.END, texto_reporte)  
         except FileNotFoundError:
             self.txt_reporte.insert(tk.END, "No se encontró el archivo de reservas.")
 
