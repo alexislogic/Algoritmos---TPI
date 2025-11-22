@@ -547,7 +547,7 @@ class AppLagosPark(tk.Tk):
             detalle_str = "|".join([f"({p['Fecha_nacimiento']};{p['sabe_nadar']})" for p in lista_asistentes]) #DETALLE DE LOS ACOMPAÑANTES EN TEXTO.
 
             linea_reserva = f"{id_reserva},{dni_resp},{nombre_resp} {apellido_resp},{detalle_str},{fecha},{horario},{cantidad},{total_pagar},{FechaSolicitud},{HoraSolicitud},{ESTADOS[1]}\n" #Añadir nuevo registro al archivo FILE_RESERVAS. (Reserva)
-            linea_constancia = f"{id_reserva},{total_pagar},{medio_pago},{HoraSolicitud}\n" #Añadir registro nuevo al archivo de FILE_CONSTANCIA. (Pago)
+            linea_constancia = f"{id_reserva},{total_pagar},{medio_pago},{HoraSolicitud},{FechaSolicitud}\n" #Añadir registro nuevo al archivo de FILE_CONSTANCIA. (Pago)
 
             with open(FILE_RESERVAS, 'a') as f:
                 f.write(linea_reserva)
@@ -787,12 +787,12 @@ class AppAdmin(tk.Toplevel): #Administracion e informes.
             fecha_actual = time.strftime("%d/%m/%Y", time.localtime()) #Fecha actual de la transaccion.
 
             linea_cancelacion = []
-            linea_cancelacion = (f"{id_target},{total_abonado},{reintegro},{fecha_actual},{horarioActual},{motivo}")
+            linea_cancelacion = (f"{id_target},{total_abonado},{reintegro},{fecha_actual},{horarioActual},{motivo}") #Linea para añadir al archivo ´cancelaciones´
 
-            with open(FILE_TURNOS, 'w') as f:
+            with open(FILE_TURNOS, 'w') as f: #Guardar archivo turnos actualizado.
                 f.writelines(turnos_nuevos)
 
-            with open(FILE_CANCELACION, 'a') as f:
+            with open(FILE_CANCELACION, 'a') as f: #Añadir nueva linea a cancelaciones.
                 f.writelines(linea_cancelacion)
 
             messagebox.showinfo("Éxito", "Reserva cancelada, cupos liberados y reintegro calculado.")
@@ -842,7 +842,7 @@ class AppAdmin(tk.Toplevel): #Administracion e informes.
                     p = linea.split(',')
 
                     # --- ZONA DE DATOS ---
-                    fecha_str = p[8] 
+                    fecha_str = p[4]
                     estado = p[10]
                     
                     if estado in conteo_estados:
@@ -853,24 +853,26 @@ class AppAdmin(tk.Toplevel): #Administracion e informes.
                     fecha_actual_lista = hoy.split("/")
                     fecha_reserva_lista = fecha_str.split("/")
                     hace_un_mes_lista = hace_un_mes.split("/")
-                    for i in range(3): #Comparar fechas.
-                        if int(fecha_reserva_lista[2-i]) < int(hace_un_mes_lista[2-i]): #Verifica si es menor comparando desde el año hasta el dia.
-                            flag = 1
-                        elif int(fecha_reserva_lista[2-i]) > int(hace_un_mes_lista[2-i]):
-                            break
-                    
-                    for i in range(3): #Comparar fechas.
-                        if int(fecha_reserva_lista[2-i]) > int(fecha_actual_lista[2-i]): #Si es mayor sale automaticamente.
-                            flag = 1
-                        elif int(fecha_reserva_lista[2-i]) < int(fecha_actual_lista[2-i]): #Si es mayor sale automaticamente.
-                            break
-                    
-                    if flag == 0:
-                        # Si pasa el filtro, recién ahí procesamos el dinero
-                        monto = float(p[7]) # Total a pagar
 
-                        if estado != "Cancelado":
-                            recaudacion_total += monto
+                    if es_fecha_valida(fecha_str) and flag == 0: #Compara la fecha mientras sea valida.
+                        for i in range(3): #Comparar si la fecha es anterior a los ultimos 30 dias.
+                            if int(fecha_reserva_lista[2-i]) < int(hace_un_mes_lista[2-i]): #Verifica si es menor comparando desde el año hasta el dia.
+                                flag = 1 #Activa bandera
+                            elif int(fecha_reserva_lista[2-i]) > int(hace_un_mes_lista[2-i]): #Si la fecha esta dentro del ultimo mes, sale del iterador.
+                                break
+                        
+                        for i in range(3): #Comparar si la fecha es superior a hoy.
+                            if int(fecha_reserva_lista[2-i]) > int(fecha_actual_lista[2-i]): #Verifica si es mayor comparando desde el año hasta el dia.
+                                flag = 1 #Activa bandera
+                            elif int(fecha_reserva_lista[2-i]) < int(fecha_actual_lista[2-i]): #Si la fecha es menor o igual a hoy, sale.
+                                break
+                    else:
+                        flag = 1 #Activa la bandera.
+                    
+                    if flag == 0 and estado != "Cancelado":
+                        # Si pasa el filtro, recién ahí procesamos el importe.
+                        monto = float(p[7]) # Importe total a mostrar.
+                        recaudacion_total += monto #Suma al importe total.
                 
                 if tipo == "Recaudación Mensual":
                     texto_reporte += f"Total Recaudado (Neto): ${recaudacion_total:,.2f}\n"
