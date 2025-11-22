@@ -163,82 +163,90 @@ class AppLagosPark(tk.Tk):
         """Crea todos los componentes de la interfaz gráfica."""
         
         # --- Frame Principal ---
-        main_frame = ttk.Frame(self, padding="20")
+        main_frame = ttk.Frame(self, padding="10")
         main_frame.pack(fill=tk.BOTH, expand=True)
 
         # --- Frame Izquierdo (Formulario) ---
-        form_frame = ttk.Frame(main_frame, width=450)
+        form_frame = ttk.Frame(main_frame, width=550) 
         form_frame.pack(side=tk.LEFT, fill=tk.Y, padx=(0, 10))
         form_frame.pack_propagate(False)
 
-        # 1. Sección Consulta
-        frame_consulta = ttk.LabelFrame(form_frame, text="1. Consultar Turno", padding="10")
+        # =================================================================
+        # 1. Sección UNIFICADA: Consulta de Turno y Pago
+        # =================================================================
+        frame_consulta = ttk.LabelFrame(form_frame, text="1. Datos del Turno y Pago", padding="5")
         frame_consulta.pack(fill=tk.X, pady=5)
         
-        ttk.Label(frame_consulta, text="Cantidad de Personas:").grid(row=0, column=0, sticky=tk.W, padx=5, pady=5)
-        self.entry_cantidad = ttk.Entry(frame_consulta, width=10)
-        self.entry_cantidad.grid(row=0, column=1, padx=5, pady=5)
+        # Fila 0: Cantidad y Fecha
+        ttk.Label(frame_consulta, text="Cant. Personas:").grid(row=0, column=0, sticky=tk.W, padx=5, pady=2)
+        self.entry_cantidad = ttk.Entry(frame_consulta, width=5)
+        self.entry_cantidad.grid(row=0, column=1, padx=5, pady=2, sticky=tk.W)
 
-        ttk.Label(frame_consulta, text="Fecha (DD-MM-AAAA):").grid(row=1, column=0, sticky=tk.W, padx=5, pady=5) #VERIFICAR: CAMBIAR A FECHA LATAM.
-        self.entry_fecha = ttk.Entry(frame_consulta, width=15)
-        self.entry_fecha.grid(row=1, column=1, padx=5, pady=5)
-        self.entry_fecha.insert(0, "") # Fecha de ejemplo
+        ttk.Label(frame_consulta, text="Fecha (DD/MM/AAAA):").grid(row=0, column=2, sticky=tk.W, padx=5, pady=2)
+        self.entry_fecha = ttk.Entry(frame_consulta, width=12)
+        self.entry_fecha.grid(row=0, column=3, padx=5, pady=2, sticky=tk.W)
+        self.entry_fecha.insert(0, "")
 
+        # Fila 1: Botón Verificar
         self.btn_verificar = ttk.Button(frame_consulta, text="Verificar Disponibilidad", command=self.on_verificar_disponibilidad)
-        self.btn_verificar.grid(row=2, column=0, columnspan=2, pady=10, sticky=tk.EW)
+        self.btn_verificar.grid(row=1, column=0, columnspan=4, pady=8, sticky=tk.EW)
 
-        ttk.Label(frame_consulta, text="Horarios Disponibles:").grid(row=3, column=0, sticky=tk.W, padx=5, pady=5)
-        self.combo_horario = ttk.Combobox(frame_consulta, state="readonly", width=18)
-        self.combo_horario.grid(row=3, column=1, padx=5, pady=5)
+        # Fila 2: Horario y Medio de Pago
+        ttk.Label(frame_consulta, text="Horario:").grid(row=2, column=0, sticky=tk.W, padx=5, pady=2)
+        self.combo_horario = ttk.Combobox(frame_consulta, state="readonly", width=12)
+        self.combo_horario.grid(row=2, column=1, padx=5, pady=2, sticky=tk.W)
+        
+        ttk.Label(frame_consulta, text="Medio Pago:").grid(row=2, column=2, sticky=tk.W, padx=5, pady=2)
+        self.combo_medio_pago = ttk.Combobox(frame_consulta, state="readonly", values=METODOS_DE_PAGO, width=15)
+        self.combo_medio_pago.grid(row=2, column=3, padx=5, pady=2, sticky=tk.W)
+        self.combo_medio_pago.current(0)
 
-        # 2. Sección Datos Responsable
-        frame_resp = ttk.LabelFrame(form_frame, text="2. Datos del Adulto Responsable", padding="10")
+
+        # =================================================================
+        # 2. Sección Datos Responsable: Entre las 2 columnas.
+        # =================================================================
+        frame_resp = ttk.LabelFrame(form_frame, text="2. Datos del Responsable", padding="5")
         frame_resp.pack(fill=tk.X, pady=5)
         
-        ttk.Label(frame_resp, text="DNI:").grid(row=0, column=0, sticky=tk.W, padx=5, pady=5)
-        self.entry_dni = ttk.Entry(frame_resp)
-        self.entry_dni.grid(row=0, column=1, sticky=tk.EW, padx=5, pady=5)
+        # Fila 0: DNI y Nombre
+        ttk.Label(frame_resp, text="DNI:").grid(row=0, column=0, sticky=tk.W, padx=5, pady=2)
+        self.entry_dni = ttk.Entry(frame_resp, width=15)
+        self.entry_dni.grid(row=0, column=1, sticky=tk.W, padx=5, pady=2)
         
-        ttk.Label(frame_resp, text="Nombre:").grid(row=1, column=0, sticky=tk.W, padx=5, pady=5)
-        self.entry_nombre = ttk.Entry(frame_resp)
-        self.entry_nombre.grid(row=1, column=1, sticky=tk.EW, padx=5, pady=5)
+        ttk.Label(frame_resp, text="Nombre:").grid(row=0, column=2, sticky=tk.W, padx=5, pady=2)
+        self.entry_nombre = ttk.Entry(frame_resp, width=15)
+        self.entry_nombre.grid(row=0, column=3, sticky=tk.W, padx=5, pady=2)
 
-        ttk.Label(frame_resp, text="Apellido:").grid(row=2, column=0, sticky=tk.W, padx=5, pady=5)
-        self.entry_apellido = ttk.Entry(frame_resp)
-        self.entry_apellido.grid(row=2, column=1, sticky=tk.EW, padx=5, pady=5)
+        # Fila 1: Apellido y Email
+        ttk.Label(frame_resp, text="Apellido:").grid(row=1, column=0, sticky=tk.W, padx=5, pady=2)
+        self.entry_apellido = ttk.Entry(frame_resp, width=15)
+        self.entry_apellido.grid(row=1, column=1, sticky=tk.W, padx=5, pady=2)
         
-        ttk.Label(frame_resp, text="Email:").grid(row=3, column=0, sticky=tk.W, padx=5, pady=5)
-        self.entry_email = ttk.Entry(frame_resp)
-        self.entry_email.grid(row=3, column=1, sticky=tk.EW, padx=5, pady=5)
+        ttk.Label(frame_resp, text="Email:").grid(row=1, column=2, sticky=tk.W, padx=5, pady=2)
+        self.entry_email = ttk.Entry(frame_resp, width=15)
+        self.entry_email.grid(row=1, column=3, sticky=tk.W, padx=5, pady=2)
         
-        # *** CAMBIO: Se pide Edad en lugar de Fecha de Nacimiento *** VERIFICAR: MODIFICAR PARA QUE SE GUARDE LA FECHA DE NACIMIENTO.
-        ttk.Label(frame_resp, text="Fecha de nacimento:").grid(row=4, column=0, sticky=tk.W, padx=5, pady=5)
-        self.entry_nacimiento = ttk.Entry(frame_resp)
-        self.entry_nacimiento.grid(row=4, column=1, sticky=tk.EW, padx=5, pady=5)
+        # Fila 2: Nacimiento y Checkbox
+        ttk.Label(frame_resp, text="F. Nacim.:").grid(row=2, column=0, sticky=tk.W, padx=5, pady=2)
+        self.entry_nacimiento = ttk.Entry(frame_resp, width=15)
+        self.entry_nacimiento.grid(row=2, column=1, sticky=tk.W, padx=5, pady=2)
 
         self.var_sabe_nadar_resp = tk.BooleanVar()
         self.check_sabe_nadar_resp = ttk.Checkbutton(frame_resp, text="¿Sabe Nadar?", variable=self.var_sabe_nadar_resp)
-        self.check_sabe_nadar_resp.grid(row=5, column=1, sticky=tk.W, padx=5, pady=5)
+        self.check_sabe_nadar_resp.grid(row=2, column=2, columnspan=2, sticky=tk.W, padx=5, pady=2)
 
+
+        # =================================================================
         # 3. Sección Acompañantes
-        frame_acomp = ttk.LabelFrame(form_frame, text="3. Acompañantes", padding="10")
+        # =================================================================
+        frame_acomp = ttk.LabelFrame(form_frame, text="3. Acompañantes", padding="5")
         frame_acomp.pack(fill=tk.BOTH, pady=5, expand=True)
         
-        # *** CAMBIO: Se pide Edad en lugar de Fecha de Nacimiento *** VERIFICAR: MODIFICAR PARA QUE SE GUARDE LA FECHA DE NACIMIENTO.
-        ttk.Label(frame_acomp, text="Ingrese 1 por línea (Formato: Fecha de nacimiento, Si/No)", style='Small.TLabel').pack(anchor=tk.W)
-        self.text_acompanantes = tk.Text(frame_acomp, height=5, font=('Arial', 10))
-        self.text_acompanantes.pack(fill=tk.X, pady=5)
-        ttk.Label(frame_acomp, text="Ejemplo: 10,Si\nEjemplo: 6,No", style='Small.TLabel').pack(anchor=tk.W)
+        ttk.Label(frame_acomp, text="1 por línea (F. Nacimiento, Si/No):", style='Small.TLabel').pack(anchor=tk.W)
+        self.text_acompanantes = tk.Text(frame_acomp, height=4, font=('Arial', 10)) # Reduje height a 4 para ahorrar espacio
+        self.text_acompanantes.pack(fill=tk.X, pady=2)
+        ttk.Label(frame_acomp, text="Ej: 12/05/2015, Si", style='Small.TLabel').pack(anchor=tk.W)
 
-
-        # 4. Sección Pago VERIFICAR Y MODIFICAR LAS "VALUES" PARA UTILIZAR DIRECTAMENTE UNA VARIABLE/ARCHIVO QUE LAS CONTENGA.
-        frame_pago = ttk.LabelFrame(form_frame, text="4. Pago", padding="10")
-        frame_pago.pack(fill=tk.X, pady=5)
-
-        ttk.Label(frame_pago, text="Medio de Pago:").grid(row=0, column=0, sticky=tk.W, padx=5, pady=5)
-        self.combo_medio_pago = ttk.Combobox(frame_pago, state="readonly", values=METODOS_DE_PAGO)
-        self.combo_medio_pago.grid(row=0, column=1, padx=5, pady=5)
-        self.combo_medio_pago.current(0)
         
         # --- Frame Derecho (Recibo) ---
         recibo_frame = ttk.Frame(main_frame)
@@ -246,20 +254,20 @@ class AppLagosPark(tk.Tk):
 
         ttk.Label(recibo_frame, text="Recibo / Confirmación", style='Header.TLabel').pack(pady=5)
         
-        self.text_recibo = tk.Text(recibo_frame, height=25, font=('Consolas', 10), state="disabled", bg="#f0f0f0")
+        self.text_recibo = tk.Text(recibo_frame, height=20, font=('Consolas', 9), state="disabled", bg="#f0f0f0") # Achiqué un poco la letra y altura
         self.text_recibo.pack(fill=tk.BOTH, expand=True, pady=5)
 
         self.btn_confirmar = ttk.Button(recibo_frame, text="CONFIRMAR RESERVA", command=self.on_confirmar_reserva, style='TButton')
-        self.btn_confirmar.pack(fill=tk.X, ipady=10, pady=10)
+        self.btn_confirmar.pack(fill=tk.X, ipady=8, pady=5)
 
         self.btn_limpiar = ttk.Button(recibo_frame, text="Limpiar Formulario", command=self.limpiar_formulario, style='TButton')
-        self.btn_limpiar.pack(fill=tk.X, ipady=5)
+        self.btn_limpiar.pack(fill=tk.X, ipady=4)
 
         # --- Botón de Acceso a Gestión (Admin) ---
-        frame_admin = ttk.Frame(main_frame, padding="10")
-        frame_admin.pack(side=tk.BOTTOM, fill=tk.X)
+        frame_admin = ttk.Frame(main_frame) # Quitamos padding excesivo
+        frame_admin.pack(side=tk.BOTTOM, fill=tk.X, pady=5)
         
-        ttk.Separator(frame_admin, orient='horizontal').pack(fill='x', pady=10)
+        ttk.Separator(frame_admin, orient='horizontal').pack(fill='x', pady=2)
         
         btn_admin = ttk.Button(frame_admin, text="Acceso Encargado/Admin", 
                                command=self.abrir_admin)
