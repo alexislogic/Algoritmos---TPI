@@ -169,10 +169,10 @@ class AppLagosPark(tk.Tk):
         self.entry_cantidad = ttk.Entry(frame_consulta, width=10)
         self.entry_cantidad.grid(row=0, column=1, padx=5, pady=5)
 
-        ttk.Label(frame_consulta, text="Fecha (AAAA-MM-DD):").grid(row=1, column=0, sticky=tk.W, padx=5, pady=5) #VERIFICAR: CAMBIAR A FECHA LATAM.
+        ttk.Label(frame_consulta, text="Fecha (DD-MM-AAAA):").grid(row=1, column=0, sticky=tk.W, padx=5, pady=5) #VERIFICAR: CAMBIAR A FECHA LATAM.
         self.entry_fecha = ttk.Entry(frame_consulta, width=15)
         self.entry_fecha.grid(row=1, column=1, padx=5, pady=5)
-        self.entry_fecha.insert(0, "2025-12-15") # Fecha de ejemplo
+        self.entry_fecha.insert(0, "") # Fecha de ejemplo
 
         self.btn_verificar = ttk.Button(frame_consulta, text="Verificar Disponibilidad", command=self.on_verificar_disponibilidad)
         self.btn_verificar.grid(row=2, column=0, columnspan=2, pady=10, sticky=tk.EW)
@@ -202,9 +202,9 @@ class AppLagosPark(tk.Tk):
         self.entry_email.grid(row=3, column=1, sticky=tk.EW, padx=5, pady=5)
         
         # *** CAMBIO: Se pide Edad en lugar de Fecha de Nacimiento *** VERIFICAR: MODIFICAR PARA QUE SE GUARDE LA FECHA DE NACIMIENTO.
-        ttk.Label(frame_resp, text="Edad:").grid(row=4, column=0, sticky=tk.W, padx=5, pady=5)
-        self.entry_edad_resp = ttk.Entry(frame_resp)
-        self.entry_edad_resp.grid(row=4, column=1, sticky=tk.EW, padx=5, pady=5)
+        ttk.Label(frame_resp, text="Fecha de nacimento:").grid(row=4, column=0, sticky=tk.W, padx=5, pady=5)
+        self.entry_nacimiento = ttk.Entry(frame_resp)
+        self.entry_nacimiento.grid(row=4, column=1, sticky=tk.EW, padx=5, pady=5)
 
         self.var_sabe_nadar_resp = tk.BooleanVar()
         self.check_sabe_nadar_resp = ttk.Checkbutton(frame_resp, text="¿Sabe Nadar?", variable=self.var_sabe_nadar_resp)
@@ -215,7 +215,7 @@ class AppLagosPark(tk.Tk):
         frame_acomp.pack(fill=tk.BOTH, pady=5, expand=True)
         
         # *** CAMBIO: Se pide Edad en lugar de Fecha de Nacimiento *** VERIFICAR: MODIFICAR PARA QUE SE GUARDE LA FECHA DE NACIMIENTO.
-        ttk.Label(frame_acomp, text="Ingrese 1 por línea (Formato: Edad,Si/No)", style='Small.TLabel').pack(anchor=tk.W)
+        ttk.Label(frame_acomp, text="Ingrese 1 por línea (Formato: Fecha de nacimiento, Si/No)", style='Small.TLabel').pack(anchor=tk.W)
         self.text_acompanantes = tk.Text(frame_acomp, height=5, font=('Arial', 10))
         self.text_acompanantes.pack(fill=tk.X, pady=5)
         ttk.Label(frame_acomp, text="Ejemplo: 10,Si\nEjemplo: 6,No", style='Small.TLabel').pack(anchor=tk.W)
@@ -391,7 +391,7 @@ class AppLagosPark(tk.Tk):
             nombre_resp = self.entry_nombre.get()
             apellido_resp = self.entry_apellido.get()
             email_resp = self.entry_email.get()
-            edad_resp1 = int(self.entry_edad_resp.get()) #VERIFICAR: CAMBIAR POR FECHA DE NACIMIENTO.
+            edad_resp1 = self.entry_nacimiento.get() #Lo guardamos como edad para verificar que sea mayor a 18 años
             sabe_nadar_resp = "Si" if self.var_sabe_nadar_resp.get() else "No"
             
             if not all([dni_resp, nombre_resp, apellido_resp]): #Comprueba que los datos se ingresen.
@@ -403,6 +403,7 @@ class AppLagosPark(tk.Tk):
                 return
 
             fecact= fecha_actual.split("/")
+            edad_resp=edad_resp1.split("/")
             for i in range(3):
                 edad_resp[i]=int(edad_resp[i])
                 fecact[i]=int(fecact[i])
@@ -417,19 +418,19 @@ class AppLagosPark(tk.Tk):
             if b==1: #Comprueba que sea mayor de edad. #VERIFICAR: MODIFICAR POR FECHA DE NACIMIENTO.
                 messagebox.showerror("Regla de Negocio", "El adulto responsable debe ser mayor de 18 años.")
                 return
-            edad_resp=18
+            fecha_nacimiento = self.entry_nacimiento.get()
 
-            # C. Datos Acompañantes VERIFICAR FUNCIONAMIENTO, HACERLO MAS SIMPLE.
+            # C. Datos Acompañantes, usamos un formato de diccionarios
             lista_asistentes = []
             lista_asistentes.append({
                 "id": 1,
                 "nombre": f"{nombre_resp} {apellido_resp}",
-                "edad": edad_resp,
+                "Fecha_nacimiento": fecha_nacimiento ,
                 "sabe_nadar": sabe_nadar_resp
             })
             
             texto_acompanantes = self.text_acompanantes.get("1.0", "end-1c").strip()
-            if texto_acompanantes: #MATI NECESITO QUE MODIFIQUES EL CUADRO DE TEXTO PARA SIMPLIFICAR LA OBTENCION DE DATOS.
+            if texto_acompanantes: #Obtenemos los datos de los acompañantes.
                 lineas = texto_acompanantes.split('\n')
                 for i, linea in enumerate(lineas):
                     linea = linea.strip()
@@ -438,22 +439,37 @@ class AppLagosPark(tk.Tk):
                         
                     partes = linea.split(',')
                     if len(partes) != 2:
-                        messagebox.showerror("Error Acompañantes", f"Error en la línea {i+1} de acompañantes. Use el formato: Edad,Si/No")
+                        messagebox.showerror("Error Acompañantes", f"Error en la línea {i+1} de acompañantes. Use el formato: Fecha de nacimiento,Si/No")
                         return
-                    
-                    edad_acomp = int(partes[0].strip())
+                    horarioActual = time.localtime()
+                    fecha_actual = time.strftime("%d/%m/%Y", horarioActual)
+                    edad_acomp = partes[0].split("/")
                     sabe_nadar_acomp = partes[1].strip().capitalize()
-                    
-                    if edad_acomp < 5:
-                        messagebox.showerror("Regla de Negocio", f"Error: El acompañante {i+1} es menor de 5 años. La edad mínima es 5.")
+
+                    fecact= fecha_actual.split("/")
+                    for j in range(3):
+                        edad_acomp[j]=int(edad_acomp[j])
+                        fecact[j]=int(fecact[j])
+                    b=0
+                    if edad_acomp[2]>fecact[2]-5:
+                        b=1
+                    elif edad_acomp[1]>fecact[1] and edad_acomp[2]==fecact[2]-5:
+                        b=1
+                    elif edad_acomp[0]>fecact[0] and edad_acomp[2]==fecact[2]-5 and edad_acomp[1]==fecact[1]:
+                        b=1
+
+                    if b==1: #Comprueba que sea mayor de edad.
+                        messagebox.showerror("Regla de Negocio", "El niño debe tener al menos 5 años.")
                         return
 
+
+                    #Crear un diccionario identificando la edad de los acompañantes
                     lista_asistentes.append({
                         "id": i + 2,
                         "nombre": f"Acompañante {i+2}",
-                        "edad": edad_acomp,
+                        "Fecha_nacimiento": partes[0],
                         "sabe_nadar": sabe_nadar_acomp
-                    })
+                    }) 
 
             # D. Validación Final de Cantidad
             if len(lista_asistentes) != cantidad:
@@ -472,7 +488,7 @@ class AppLagosPark(tk.Tk):
 
         #Abarca datos de funcionamiento:
         except ValueError as e:
-            messagebox.showerror("Error de Datos", f"Dato inválido: La EDAD y CANTIDAD deben ser números enteros. Revise los campos.")
+            messagebox.showerror("Error de Datos", f"Dato inválido: La CANTIDAD debe ser número entero. Revise el campo.")
             return
         except Exception as e:
             messagebox.showerror("Error Inesperado", str(e))
@@ -514,8 +530,8 @@ class AppLagosPark(tk.Tk):
             hora_local = time.localtime()
             FechaSolicitud = time.strftime("%d/%m/%Y", hora_local) #OBTENER FECHA ACTUAL
             HoraSolicitud = time.strftime("%H:%M:%S", hora_local) #OBTENER HORA ACTUAL
-            detalle_str = "|".join([f"({p['edad']};{p['sabe_nadar']})" for p in lista_asistentes]) #VERIFICAR: ESTOY HAY QUE CAMBIARLO NI BIEN ESTE HECHA LA INTERFAZ.
-            
+            detalle_str = "|".join([f"({p['Fecha_nacimiento']};{p['sabe_nadar']})" for p in lista_asistentes]) #VERIFICAR: ESTOY HAY QUE CAMBIARLO NI BIEN ESTE HECHA LA INTERFAZ.
+
             linea_reserva = f"{id_reserva},{dni_resp},{nombre_resp} {apellido_resp},{detalle_str},{fecha},{horario},{cantidad},{total_pagar},{FechaSolicitud},{HoraSolicitud},{ESTADOS[1]}\n" #Añadir nuevo registro al archivo FILE_RESERVAS. (Reserva)
             linea_constancia = f"{id_reserva},{total_pagar},{medio_pago},{HoraSolicitud}\n" #Añadir registro nuevo al archivo de FILE_CONSTANCIA. (Pago)
 
@@ -542,10 +558,28 @@ class AppLagosPark(tk.Tk):
         recibo_texto += f"TOTAL ABONADO: $ {total_pagar:,.2f}\n"
         recibo_texto += "=" * 40 + "\n"
         recibo_texto += "ENTRADAS GENERADAS:\n"
+
         
-        for p in lista_asistentes:
-            tipo_entrada = "VERDE (Adulto)" if p['edad'] >= 18 else "AMARILLA (Menor)"
-            recibo_texto += f"  - Asistente {p['id']} (Edad: {p['edad']}) -> Entrada {tipo_entrada}\n"
+        for p in lista_asistentes: # Verificar edad para asignar la entrada
+            horarioActual = time.localtime()
+            fecha_actual = time.strftime("%d/%m/%Y", horarioActual)
+            edad_acomp1 = p['Fecha_nacimiento']
+            edad_acomp = edad_acomp1.split("/")
+
+            fecact= fecha_actual.split("/")
+            for j in range(3):
+                edad_acomp[j]=int(edad_acomp[j])
+                fecact[j]=int(fecact[j])
+            b=0
+            if edad_acomp[2]>fecact[2]-18:
+                b=1
+            elif edad_acomp[1]>fecact[1] and edad_acomp[2]==fecact[2]-18:
+                b=1
+            elif edad_acomp[0]>fecact[0] and edad_acomp[2]==fecact[2]-18 and edad_acomp[1]==fecact[1]:
+                    b=1
+            
+            tipo_entrada = "VERDE (Adulto)" if b == 0 else "AMARILLA (Menor)" #Verificamos si es mayor para entregar la entrada correspondiente.
+            recibo_texto += f"  - Asistente {p['id']} (Fecha de nacimiento: {p['Fecha_nacimiento']}) -> Entrada {tipo_entrada}\n"
         
         self.text_recibo.config(state="normal", bg="#e0ffe0")
         self.text_recibo.delete("1.0", tk.END)
