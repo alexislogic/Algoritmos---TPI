@@ -312,7 +312,7 @@ class AppLagosPark(tk.Tk):
             return
 
         if not es_fecha_valida(fecha_consulta):
-            messagebox.showerror("Datos Inválidos", "La fecha debe usar el formato ´dd/mm/yyyy´.")
+            messagebox.showerror("Datos Inválidos", "La fecha debe usar el formato ´dd/mm/aaaa´.")
             return
 
         horarioActual = time.localtime()
