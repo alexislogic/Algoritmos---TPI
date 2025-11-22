@@ -19,40 +19,6 @@ FILE_CONSTANCIA = "constancia.txt" #Archivo con las constancias de pago, que con
 FILE_TARIFA = "tarifas.txt" #Contiene el valor de la tarifa por cada entrada.
 FILE_CANCELACION = "cancelacion.txt" #Contiene las cancelaciones.
 
-# --- Estructura de Archivos---
-#   Funcionamiento:
-    # 1. turnos.txt /LISTO
-    #    - Propósito: Almacena los cupos disponibles por cada turno.
-    #    - Formato: CSV (Valores Separados por Coma)
-    #    - Estructura: fecha,horario,cupos_disponibles
-    #    - Ejemplo:
-    #      2025-11-15,11:00,80
-    #      2025-11-15,12:00,100
-    #
-    # 2. reservas.txt /LISTO
-    #    - Propósito: Log de todas las reservas confirmadas.
-    #    - Formato: CSV (Valores Separados por Coma)
-    #    - Estructura: id_reserva,dni_resp,nombre_resp,apellido_resp,detalle_str,fecha,horario,cantidad,total_pagar,FechaSolicitud,HoraSolicitud,ESTADOS
-    #    - 'detalle_asistentes' es un string separado por '|'
-    #    - Ejemplo:
-    #       -
-    #
-    # 3. proximo_id.txt /LISTO
-    #    - Propósito: Almacena el próximo número de ID de reserva.
-    #    - Formato: Texto plano (un solo número)
-    #    - Ejemplo:
-    #      1001
-   
-   #Alcances Gestionar (Se crean durante el programa): /LISTO
-    # Solicitud de turno (Nro Solicitud, DatosResponsable, DatosAcompañantes, FechaTurno, HoraTurno, Cantidad de personas, Importe, FechaSolicitud, HoraSolicitud,  Estado)
-        #Se almacenara en varias variables, para luego guardarse en el archivo reservas.
-    # Constancia de pago (Nro Solicitud, Importe, Medio de pago, FechaPago, HoraPago)
-#
-   #Alcances Administrar (Ya deben estar cargados): /LISTO
-    # Metodo de pago (Nro MedioDePago, Descripción)
-    # Tarifas (Nro Operación, Descripción, Costo)
-    # Cancelaciones (Nro Solicitud, ImporteTotal, ImporteDevuelto, FechaCancelación, HoraCancelación, Motivo)
-
 def es_fecha_valida(texto): #Verifica que la fecha sea valida en formato.
         try:
             # Intenta crear la fecha. Si el formato está mal o el día no existe (ej: 30/02), falla.
