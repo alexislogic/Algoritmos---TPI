@@ -415,8 +415,16 @@ class AppLagosPark(tk.Tk):
                 messagebox.showerror("Datos Incompletos", "Por favor, complete todos los datos del responsable.")
                 return
             
+            if not dni_resp.isdigit():
+                messagebox.showerror("Datos invalidos", "Debe ingresar un DNI VALIDO: Solo numeros.")
+                return
+
             if not "@" in email_resp:
-                messagebox.showerror("El mail debe ser valido.")
+                messagebox.showerror("Datos invalidos", "El mail debe ser valido.")
+                return
+
+            if not es_fecha_valida(edad_resp1):
+                messagebox.showerror("Datos invalidos", "Debe ingresar una fecha valida.")
                 return
 
             fecact= fecha_actual.split("/")
@@ -455,6 +463,7 @@ class AppLagosPark(tk.Tk):
                         continue
                         
                     partes = linea.split(',')
+
                     if len(partes) != 2:
                         messagebox.showerror("Error Acompañantes", f"Error en la línea {i+1} de acompañantes. Use el formato: Fecha de nacimiento,Si/No")
                         return
@@ -462,8 +471,13 @@ class AppLagosPark(tk.Tk):
                     fecha_actual = time.strftime("%d/%m/%Y", horarioActual)
                     edad_acomp = partes[0].split("/")
                     sabe_nadar_acomp = partes[1].strip().capitalize()
-                    if len(edad_acomp)!=3 or len(edad_acomp[0])!=2 or len(edad_acomp[1])!=2 or len(edad_acomp[2])!=4:
+                    
+                    if not es_fecha_valida(partes[0]): #Verificar bien formato de fecha.
                         messagebox.showerror("Error de formato", "ingrese fecha (DD,MM,AAAA),si/no")
+                        return
+
+                    if "no" != sabe_nadar_acomp.lower() and "si" != sabe_nadar_acomp.lower(): #Verificar que ingrese bien los datos.
+                        messagebox.showerror("Error de formato", "ingrese si o no: (DD,MM,AAAA),si/no")
                         return
 
                     fecact= fecha_actual.split("/")
