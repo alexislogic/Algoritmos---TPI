@@ -607,12 +607,10 @@ class AppLagosPark(tk.Tk):
         self.btn_confirmar.config(state="disabled")
         messagebox.showinfo("Éxito", f"Reserva {id_reserva} guardada correctamente.")
 
-
     def limpiar_formulario(self):
         """Limpia todos los campos para una nueva venta."""
         self.entry_cantidad.delete(0, tk.END)
         self.entry_fecha.delete(0, tk.END)
-        self.entry_fecha.insert(0, "")
         self.combo_horario['values'] = []
         self.combo_horario.set('')
         
@@ -620,7 +618,7 @@ class AppLagosPark(tk.Tk):
         self.entry_nombre.delete(0, tk.END)
         self.entry_apellido.delete(0, tk.END)
         self.entry_email.delete(0, tk.END)
-        self.entry_edad_resp.delete(0, tk.END)
+        self.entry_nacimiento.delete(0, tk.END)
         self.var_sabe_nadar_resp.set(False)
         
         self.text_acompanantes.delete("1.0", tk.END)
