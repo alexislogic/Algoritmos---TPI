@@ -862,8 +862,8 @@ class AppAdmin(tk.Toplevel): #Administracion e informes.
         texto_reporte += f"Generado el: {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}\n\n"
         
         # Definimos las fechas de control antes de abrir el archivo para no recalcular en cada vuelta
-        hoy = datetime.datetime.now()
-        hace_un_mes = hoy - datetime.timedelta(days=30) #Tomamos en cuenta los 30 dias anteriores.
+        hoy = datetime.datetime.now().strftime("%d/%m/%Y")
+        hace_un_mes = (datetime.datetime.now() - datetime.timedelta(days=30)).strftime("%d/%m/%Y") #Tomamos en cuenta los 30 dias anteriores.
 
         recaudacion_total = 0
         conteo_estados = {"Pendiente": 0, "Abonado": 0, "Cancelado": 0}
@@ -874,35 +874,43 @@ class AppAdmin(tk.Toplevel): #Administracion e informes.
                     linea = linea.strip()
                     if not linea: continue
                     p = linea.split(',')
-                    
+
                     # --- ZONA DE DATOS ---
                     fecha_str = p[8] 
+                    estado = p[10]
                     
+                    if estado in conteo_estados:
+                        conteo_estados[estado] += 1
+
                     try:
                         # Convertimos el texto del archivo a un objeto fecha real
-                        fecha_registro = datetime.strptime(fecha_str, "%d/%m/%Y")
+                        fecha_registro = datetime.datetime.strptime(fecha_str.strip(), "%d/%m/%Y")
                     except ValueError:
                         # Si la fecha está mal escrita o el formato no coincide, saltamos la línea
                         continue
 
                     # --- ZONA DE FILTRO ---
-                    if hace_un_mes <= fecha_registro <= hoy:
+                    flag = 0 #Sirve para avisar si la fecha es valida o no.
+                    fecha_actual_lista = hoy.split("/")
+                    fecha_reserva_lista = fecha_str.split("/")
+                    hace_un_mes_lista = hace_un_mes.split("/")
+                    for i in range(3): #Comparar fechas.
+                        if int(fecha_reserva_lista[2-i]) < int(hace_un_mes_lista[2-i]): #Verifica si es menor comparando desde el año hasta el dia.
+                            flag = 1
                         
+                        if int(fecha_reserva_lista[2-i]) > int(fecha_actual_lista[2-i]): #Si es mayor sale automaticamente.
+                            flag = 1    
+                    
+                    if flag == 0:
                         # Si pasa el filtro, recién ahí procesamos el dinero
                         monto = float(p[7]) # Total a pagar
-                        estado = p[10]      # Estado
-                        
-                        if estado in conteo_estados:
-                            conteo_estados[estado] += 1
-                        
+
                         if estado != "Cancelado":
                             recaudacion_total += monto
-
-                if tipo == "Recaudación Mensual (Tomando los 30 dias anteriores)":
-                    # Nota: Aquí podrías filtrar por fecha si quisieras hacerlo más complejo
+                
+                if tipo == "Recaudación Mensual":
                     texto_reporte += f"Total Recaudado (Neto): ${recaudacion_total:,.2f}\n"
-                    texto_reporte += "(Excluye reservas canceladas)\n"
-                    
+                    texto_reporte += "(Excluye reservas canceladas)\n" 
                 elif tipo == "Reservas por Estado":
                     for est, cant in conteo_estados.items():
                         texto_reporte += f"{est}: {cant} reservas\n"
