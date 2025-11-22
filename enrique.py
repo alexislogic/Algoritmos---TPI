@@ -61,8 +61,9 @@ def es_fecha_valida(texto): #Verifica que la fecha sea valida en formato.
         except ValueError:
             return False
 
-class AppLagosPark(tk.Tk): 
-    super().__init__()
+class AppLagosPark(tk.Tk):
+    def __init__(self):
+        super().__init__()
 
         #Definimos flexibilidad de ventana.
         self.title("TPI Algoritmos - Venta de Entradas 'Lagos Park'")
