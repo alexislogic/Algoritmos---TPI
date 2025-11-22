@@ -604,7 +604,7 @@ class AppLagosPark(tk.Tk):
         """Limpia todos los campos para una nueva venta."""
         self.entry_cantidad.delete(0, tk.END)
         self.entry_fecha.delete(0, tk.END)
-        self.entry_fecha.insert(0, "2025-11-15")
+        self.entry_fecha.insert(0, "")
         self.combo_horario['values'] = []
         self.combo_horario.set('')
         
