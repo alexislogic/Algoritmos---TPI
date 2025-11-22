@@ -87,14 +87,14 @@ class AppLagosPark(tk.Tk):
         self.style.theme_use('clam')
         self.style = ttk.Style(self)
         self.style.configure('TLabel', font=('Arial', 10))
-        self.style = ttk.Style()
-        self.style.theme_use('clam')
+        self.style.configure('TFrame', background='#E0F4FF') 
         self.style.configure('TButton',background='#6EC6FF')
         self.style.map('TButton',background=[('active', '#e7d5ff')])
         self.style.configure('TEntry', font=('Arial', 10))
         self.style.configure('TCombobox', font=('Arial', 10))
         self.style.configure('Header.TLabel', font=('Arial', 14, 'bold'))
         self.style.configure('Small.TLabel', font=('Arial', 8, 'italic'))
+        
 
         self.cargar_datos_iniciales()
         self.crear_widgets()
