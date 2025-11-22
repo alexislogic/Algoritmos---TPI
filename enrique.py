@@ -383,13 +383,15 @@ class AppLagosPark(tk.Tk):
             horario = horario_seleccionado
             
             print(f"El horario seleccionado actual es: {horario}")
+            horarioActual = time.localtime()
+            fecha_actual = time.strftime("%d/%m/%Y", horarioActual)
 
             # B. Datos Responsable
             dni_resp = self.entry_dni.get()
             nombre_resp = self.entry_nombre.get()
             apellido_resp = self.entry_apellido.get()
             email_resp = self.entry_email.get()
-            edad_resp = int(self.entry_edad_resp.get()) #VERIFICAR: CAMBIAR POR FECHA DE NACIMIENTO.
+            edad_resp1 = int(self.entry_edad_resp.get()) #VERIFICAR: CAMBIAR POR FECHA DE NACIMIENTO.
             sabe_nadar_resp = "Si" if self.var_sabe_nadar_resp.get() else "No"
             
             if not all([dni_resp, nombre_resp, apellido_resp]): #Comprueba que los datos se ingresen.
@@ -400,9 +402,22 @@ class AppLagosPark(tk.Tk):
                 messagebox.showerror("El mail debe ser valido.")
                 return
 
-            if edad_resp < 18: #Comprueba que sea mayor de edad. #VERIFICAR: MODIFICAR POR FECHA DE NACIMIENTO.
+            fecact= fecha_actual.split("/")
+            for i in range(3):
+                edad_resp[i]=int(edad_resp[i])
+                fecact[i]=int(fecact[i])
+            b=0
+            if edad_resp[2]>fecact[2]-18:
+                b=1
+            elif edad_resp[1]>fecact[1] and edad_resp[2]==fecact[2]-18:
+                b=1
+            elif edad_resp[0]>fecact[0] and edad_resp[2]==fecact[2]-18 and edad_resp[1]==fecact[1]:
+                b=1
+
+            if b==1: #Comprueba que sea mayor de edad. #VERIFICAR: MODIFICAR POR FECHA DE NACIMIENTO.
                 messagebox.showerror("Regla de Negocio", "El adulto responsable debe ser mayor de 18 años.")
                 return
+            edad_resp=18
 
             # C. Datos Acompañantes VERIFICAR FUNCIONAMIENTO, HACERLO MAS SIMPLE.
             lista_asistentes = []
