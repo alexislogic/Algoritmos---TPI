@@ -19,6 +19,9 @@ FILE_CONSTANCIA = "constancia.txt" #Archivo con las constancias de pago, que con
 FILE_TARIFA = "tarifas.txt" #Contiene el valor de la tarifa por cada entrada.
 FILE_CANCELACION = "cancelacion.txt" #Contiene las cancelaciones.
 
+# --- Logica global
+cantidad_cupos = 0 #Permite validar si el usuario modifico la cantidad de acompañantes sin verificar antes.
+
 def es_fecha_valida(texto): #Verifica que la fecha sea valida en formato.
         try:
             # Intenta crear la fecha. Si el formato está mal o el día no existe (ej: 30/02), falla.
@@ -285,7 +288,11 @@ class AppLagosPark(tk.Tk):
         if cantidad <= 0:
             messagebox.showerror("Datos Inválidos", "La cantidad de personas debe ser mayor a 0.")
             return
-            
+        
+        if cantidad > 100:
+            messagebox.showerror("Datos Inválidos", "La cantidad de personas debe ser menor a 100.")
+            return
+
         if not fecha_consulta:
             messagebox.showerror("Datos Inválidos", "La fecha no puede estar vacía.")
             return
@@ -294,6 +301,9 @@ class AppLagosPark(tk.Tk):
             messagebox.showerror("Datos Inválidos", "La fecha debe usar el formato ´dd/mm/aaaa´.")
             return
 
+        global cantidad_cupos #Obtenemos la variable global
+        cantidad_cupos = cantidad #Para confirmar luego.
+        print(f"Cantidad VERIFICAR:, {cantidad}, cupos VERIFICAR: {cantidad_cupos}")
         horarioActual = time.localtime()
         fecha_actual = time.strftime("%d/%m/%Y", horarioActual)
         fecha_actual_lista = fecha_actual.split("/")
@@ -405,6 +415,10 @@ class AppLagosPark(tk.Tk):
             fecha = self.entry_fecha.get()
             horarioActual = time.localtime()
             horario_seleccionado = self.combo_horario.get()
+            if cantidad_cupos != cantidad:
+                print(f"Cantidad:, {cantidad}, cupos: {cantidad_cupos}")
+                messagebox.showerror("Datos no validos", "Se modifico la cantidad de acompañantes, porfavor verifique nuevamente.")
+                return
             if not horario_seleccionado: #Verificacion que exista.
                 messagebox.showerror("Error", "Por favor, verifique la disponibilidad y seleccione un horario.")
                 return
@@ -423,6 +437,10 @@ class AppLagosPark(tk.Tk):
 
             if cantidad <= 0:
                 messagebox.showerror("Datos Inválidos", "La cantidad de personas debe ser mayor a 0.")
+                return
+            
+            if cantidad > 100:
+                messagebox.showerror("Datos Inválidos", "La cantidad de personas debe ser menor a 100.")
                 return
                 
             if not fecha_consulta:
