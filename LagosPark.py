@@ -795,10 +795,7 @@ class AppAdmin(tk.Toplevel): #Administracion e informes.
         try:
             with open(FILE_RESERVAS, 'r') as f: #BUSQUEDA EFICIENTE DENTRO DEL ARCHIVO POR INDICE.
                 lineas = f.readlines()
-                if int(id_buscado) > len(lineas):
-                    messagebox.showerror("Datos invalidos", "No existe ese numero de registro.")
-                    return
-                self.reserva_encontrada = lineas[int(id_buscado)-1].strip().split(',') #Busca en la linea especifica usando el indice.
+                self.reserva_encontrada = self.proceso_busqueda(lineas, id_buscado)
             
             if self.reserva_encontrada:
                 # Agrupar datos en un string llamado "info"
@@ -823,6 +820,18 @@ class AppAdmin(tk.Toplevel): #Administracion e informes.
                 
         except FileNotFoundError:
             messagebox.showerror("Error", "No existe el archivo de reservas.")
+
+    def proceso_busqueda(self, lista, id):
+        medio = len(lista)//2
+        if len(lista) == 0:
+            pass
+        elif lista[medio][0] == id:
+            return lista[medio].strip().split(",")
+        elif lista[medio][0] > id:
+            return self.proceso_busqueda(lista[0:medio], id)
+        elif lista[medio][0] < id:
+            return self.proceso_busqueda(lista[medio+1:len(lista)], id)
+        return False
 
     def ejecutar_cancelacion(self):
         if not self.reserva_encontrada:
